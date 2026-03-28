@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ISLAA7 - UAE Repair Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      body[dir="rtl"] {
+        font-family: 'Tajawal', sans-serif;
+      }
+
+      /* ── Custom Scrollbar ─────────────────────────────────────── */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #C29B40; border-radius: 4px; }
+
+      /* ── App Glass Effect ─────────────────────────────────────── */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(194, 155, 64, 0.2);
+      }
+      .dark .glass-panel {
+        background: rgba(26, 26, 26, 0.9);
+        border: 1px solid rgba(194, 155, 64, 0.1);
+      }
+      .glass-input {
+        background: rgba(255, 250, 240, 0.8);
+        border: 1px solid rgba(194, 155, 64, 0.3);
+      }
+      .dark .glass-input {
+        background: rgba(40, 40, 40, 0.8);
+        border: 1px solid rgba(194, 155, 64, 0.1);
+      }
+      .gold-gradient {
+        background: linear-gradient(135deg, #C29B40 0%, #E6C268 50%, #C29B40 100%);
+      }
+
+      /* ── High Contrast Accessibility ──────────────────────────── */
+      .high-contrast * { border-color: #000 !important; color: #000 !important; text-shadow: none !important; }
+      .high-contrast.dark * { border-color: #fff !important; color: #fff !important; }
+      .high-contrast .gold-gradient { background: #C29B40 !important; }
+
+      /* ══════════════════════════════════════════════════════════ */
+      /* LANDING PAGE & MARKET PLAN ANIMATIONS                      */
+      /* ══════════════════════════════════════════════════════════ */
+
+      /* ── Keyframes ────────────────────────────────────────────── */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(36px); }
+        to   { opacity: 1; transform: translateY(0);    }
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px);   }
+        50%       { transform: translateY(-18px); }
+      }
+      @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 18px rgba(194,155,64,0.25); }
+        50%       { box-shadow: 0 0 40px rgba(194,155,64,0.65); }
+      }
+      @keyframes shimmer {
+        0%   { background-position: -200% center; }
+        100% { background-position:  200% center; }
+      }
+      @keyframes gradientOrb {
+        0%, 100% { transform: translate(0,0) scale(1);     }
+        33%       { transform: translate(30px,-20px) scale(1.05); }
+        66%       { transform: translate(-20px,15px) scale(0.97); }
+      }
+
+      /* ── Immediate / CSS animation classes ───────────────────── */
+      .animate-fade-in-up {
+        opacity: 0;
+        animation: fadeInUp 0.85s cubic-bezier(0.22,1,0.36,1) both;
+      }
+      .animate-float   { animation: float 4s ease-in-out infinite; }
+      .animate-pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+
+      /* ── Gradient text ────────────────────────────────────────── */
+      .gradient-text-gold {
+        background: linear-gradient(135deg, #C29B40 0%, #F0D070 40%, #C29B40 80%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3.5s linear infinite;
+      }
+      .gradient-text-green {
+        background: linear-gradient(135deg, #00732F 0%, #00B847 50%, #00732F 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: shimmer 3.5s linear infinite;
+      }
+
+      /* ── Scroll-reveal base states ────────────────────────────── */
+      .reveal, .reveal-left, .reveal-right, .reveal-scale {
+        will-change: transform, opacity;
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(36px);
+        transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                    transform 0.8s cubic-bezier(0.22,1,0.36,1);
+      }
+      .reveal-left {
+        opacity: 0;
+        transform: translateX(-40px);
+        transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                    transform 0.8s cubic-bezier(0.22,1,0.36,1);
+      }
+      .reveal-right {
+        opacity: 0;
+        transform: translateX(40px);
+        transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1),
+                    transform 0.8s cubic-bezier(0.22,1,0.36,1);
+      }
+      .reveal-scale {
+        opacity: 0;
+        transform: scale(0.92);
+        transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
+                    transform 0.7s cubic-bezier(0.22,1,0.36,1);
+      }
+      /* Visible state */
+      .reveal.in-view,
+      .reveal-left.in-view,
+      .reveal-right.in-view,
+      .reveal-scale.in-view {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ── Accessibility: reduced motion ────────────────────────── */
+      @media (prefers-reduced-motion: reduce) {
+        .reveal, .reveal-left, .reveal-right, .reveal-scale,
+        .animate-fade-in-up, .animate-float, .animate-pulse-glow {
+          animation: none !important;
+          transition: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
+
+      /* ── Landing glass card ───────────────────────────────────── */
+      .landing-glass {
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      /* ── Navbar blur ──────────────────────────────────────────── */
+      .navbar-glass {
+        background: rgba(5,5,10,0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(194,155,64,0.12);
+      }
+
+      /* ── Hero orbs ────────────────────────────────────────────── */
+      .hero-orb-1 {
+        background: radial-gradient(circle, rgba(194,155,64,0.35) 0%, transparent 70%);
+        animation: gradientOrb 9s ease-in-out infinite;
+      }
+      .hero-orb-2 {
+        background: radial-gradient(circle, rgba(0,115,47,0.25) 0%, transparent 70%);
+        animation: gradientOrb 12s ease-in-out infinite reverse;
+      }
+
+      /* ── Hover lift ───────────────────────────────────────────── */
+      .hover-lift {
+        transition: transform 0.28s cubic-bezier(0.22,1,0.36,1),
+                    box-shadow 0.28s cubic-bezier(0.22,1,0.36,1);
+      }
+      .hover-lift:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              uae: {
+                green: '#00732F',
+                gold: '#C29B40',
+                goldLight: '#E6C268',
+                goldDark: '#917228',
+                sand: '#F9F7F2',
+                dark: '#1A1A1A',
+              }
+            },
+            boxShadow: {
+              'glow': '0 0 15px rgba(194, 155, 64, 0.3)',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-uae-sand dark:bg-gray-950 text-gray-900 dark:text-gray-100 overflow-x-hidden transition-colors">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

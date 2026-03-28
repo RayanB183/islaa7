@@ -1,0 +1,8 @@
+{
+  "name": "ISLAA7 (إصلاح)",
+  "description": "Official UAE Government sustainability and repair application. Features secure UAE Pass login, multi-language support (Arabic RTL), repair booking system, technician assignment, and administrative dashboards.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

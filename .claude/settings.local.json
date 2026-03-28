@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"c:/Users/abill/Downloads/islaa7-\\(إصلاح\\) \\(2\\)\" -type f -name \"*.json\" -o -name \"*.html\" -o -name \"*.js\" -o -name \"*.jsx\" -o -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.css\" -o -name \"*.scss\" -o -name \"*.md\")"
+    ]
+  }
+}
