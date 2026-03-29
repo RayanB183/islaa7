@@ -75,7 +75,9 @@ const AppContext = createContext<AppContextType | null>(null);
 
 // --- Utilities for Formatting and AI ---
 
-const GROQ_API_KEY = "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";
+// GROQ_API_KEY is intentionally absent here — it lives server-side only.
+// The validateWithAI function calls /api/validate-spam (a Vercel serverless function)
+// which holds the key in process.env and never exposes it to the browser.
 const UAE_PASS_LOGO = "https://i.postimg.cc/d0BQ6FdX/uaepasslogogreen-removebg-preview.png";
 
 // Format: 784-1234-1234567-1
@@ -130,61 +132,34 @@ const isObviousSpam = (text: string) => {
 };
 
 const validateWithAI = async (name: string, email: string): Promise<boolean> => {
-  // 1. Local Pre-check
+  // 1. Local pre-check — catches obvious spam without a network call
   if (isObviousSpam(name) || isObviousSpam(email)) {
-      console.warn("Spam detected by local regex");
-      return true;
+    console.warn("Spam detected by local regex");
+    return true;
   }
 
   try {
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // 2. Call the server-side proxy — the Groq API key NEVER reaches the browser.
+    //    In dev: run `vercel dev` so /api/* routes are served locally.
+    //    In prod: Vercel automatically routes /api/* to the serverless function.
+    const response = await fetch("/api/validate-spam", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: "system",
-            content: `You are a strict anti-spam validator for the UAE Government.
-            Analyze the provided Name and Email.
-            
-            Reply with EXACTLY one word: "true" if it is spam/fake/gibberish, or "false" if it looks valid.
-            
-            Spam examples: "asd asd", "hhhhh", "test test", "user123", "no name"
-            Valid examples: "Ahmed Ali", "Sarah Smith", "Mohammad Al-Qasimi"
-            `
-          },
-          {
-            role: "user",
-            content: `Name: "${name}", Email: "${email}"`
-          }
-        ],
-        model: "llama3-8b-8192", // Using 8b model for speed and lower probability of rate limits
-        temperature: 0,
-        max_tokens: 10
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email }),
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`AI API Error (${response.status}):`, errorText);
-        // Fallback: If AI fails, we rely on local regex. Returning false allows user to proceed.
-        // If we want to be strict, we could return true, but that risks blocking users during outages.
-        return false;
+      console.error(`Spam API error (${response.status})`);
+      return false; // Fail open — don't block users on service errors
     }
 
     const data = await response.json();
-    const content = data.choices[0]?.message?.content?.toLowerCase().trim();
-    
-    console.log("AI Validation Result:", content);
-
-    return content?.includes("true") || false;
+    console.log("AI Validation Result:", data.isSpam);
+    return data.isSpam ?? false;
 
   } catch (error) {
     console.error("AI Validation Exception:", error);
-    return false;
+    return false; // Fail open on network errors
   }
 };
 
@@ -231,49 +206,66 @@ const NavBar = () => {
   const isRTL = language === Language.ARABIC;
 
   return (
-    <nav className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-uae-gold/20 dark:border-uae-gold/10">
+    <nav className="bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl shadow-sm sticky top-0 z-50 border-b border-gray-200/80 dark:border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/home')}>
-             <img src={APP_LOGO_URL} alt="ISLAA7 Logo" className="h-10 w-auto object-contain" />
-             <div className="hidden md:block">
-               <h1 className="text-xl font-bold text-uae-goldDark dark:text-uae-gold tracking-tight">{t('app_name')}</h1>
-               <p className="text-[10px] text-gray-400 font-medium tracking-widest uppercase">UAE Government Initiative</p>
-             </div>
+
+          {/* Brand */}
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/home')}>
+            <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+              <span className="text-white font-black text-base leading-none">إ</span>
+            </div>
+            <div className="hidden md:block">
+              <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight leading-tight">{t('app_name')}</h1>
+              <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase leading-tight">UAE Government Initiative</p>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-4">
-             {user && user.role === UserRole.CITIZEN && (
-                 <div className="flex items-center gap-1 bg-uae-gold/10 dark:bg-uae-gold/20 px-3 py-1 rounded-full border border-uae-gold/30">
-                     <span className="text-sm font-bold text-uae-goldDark dark:text-uae-gold">{user.points}</span>
-                     <GiftIcon className="h-4 w-4 text-uae-gold" />
-                 </div>
-             )}
-             {user && user.role === UserRole.TECHNICIAN && (
-                 <div className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-200">
-                     <ShieldCheckIcon className="h-4 w-4 text-green-600" />
-                     <span className="text-xs font-bold text-green-700 dark:text-green-400">Verified</span>
-                 </div>
-             )}
-            <LanguageSwitcher />
-            {user && (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => navigate('/settings')}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
-                >
-                  <Cog6ToothIcon className="h-6 w-6" />
-                </button>
-                <button 
-                  onClick={logout}
-                  className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-600 transition-colors"
-                  title={t('logout')}
-                >
-                  <ArrowRightOnRectangleIcon className={`h-6 w-6 ${isRTL ? 'transform rotate-180' : ''}`} />
-                </button>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {/* Points chip — Citizen only */}
+            {user?.role === UserRole.CITIZEN && (
+              <button
+                onClick={() => navigate('/rewards')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-uae-gold/30 bg-uae-gold/8 dark:bg-uae-gold/15 hover:bg-uae-gold/15 dark:hover:bg-uae-gold/20 transition-colors"
+              >
+                <GiftIcon className="h-3.5 w-3.5 text-uae-gold" />
+                <span className="text-sm font-black text-uae-goldDark dark:text-uae-gold">{user.points}</span>
+                <span className="text-[10px] text-gray-500 hidden sm:block">pts</span>
+              </button>
+            )}
+            {/* Verified chip — Technician only */}
+            {user?.role === UserRole.TECHNICIAN && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-uae-green/30 bg-uae-green/8 dark:bg-uae-green/15">
+                <ShieldCheckIcon className="h-3.5 w-3.5 text-uae-green" />
+                <span className="text-xs font-bold text-uae-green">Verified</span>
               </div>
             )}
+
+            <LanguageSwitcher />
+
+            {user && (
+              <>
+                {/* Avatar → settings */}
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="w-9 h-9 rounded-full gold-gradient flex items-center justify-center text-white font-black text-sm shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                  title="Settings"
+                >
+                  {user.name.charAt(0).toUpperCase()}
+                </button>
+                {/* Logout */}
+                <button
+                  onClick={logout}
+                  className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                  title={t('logout')}
+                >
+                  <ArrowRightOnRectangleIcon className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+                </button>
+              </>
+            )}
           </div>
+
         </div>
       </div>
     </nav>
@@ -752,112 +744,162 @@ const Dashboard = () => {
     { label: t('recycle'), desc: t('recycle_desc'), icon: GlobeAltIcon },
   ];
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+  const statusConfig: Record<RepairStatus, { bg: string; text: string; dot: string }> = {
+    [RepairStatus.COMPLETED]:  { bg: 'bg-green-100 dark:bg-green-900/30',  text: 'text-green-700 dark:text-green-400',  dot: 'bg-green-500' },
+    [RepairStatus.PENDING]:    { bg: 'bg-amber-100 dark:bg-amber-900/30',  text: 'text-amber-700 dark:text-amber-400',  dot: 'bg-amber-400' },
+    [RepairStatus.APPROVED]:   { bg: 'bg-blue-100 dark:bg-blue-900/30',    text: 'text-blue-700 dark:text-blue-400',    dot: 'bg-blue-500' },
+    [RepairStatus.ASSIGNED]:   { bg: 'bg-blue-100 dark:bg-blue-900/30',    text: 'text-blue-700 dark:text-blue-400',    dot: 'bg-blue-500' },
+    [RepairStatus.IN_PROGRESS]:{ bg: 'bg-purple-100 dark:bg-purple-900/30',text: 'text-purple-700 dark:text-purple-400',dot: 'bg-purple-500' },
+    [RepairStatus.REJECTED]:   { bg: 'bg-red-100 dark:bg-red-900/30',      text: 'text-red-700 dark:text-red-400',      dot: 'bg-red-500' },
+    [RepairStatus.FAILED]:     { bg: 'bg-red-100 dark:bg-red-900/30',      text: 'text-red-700 dark:text-red-400',      dot: 'bg-red-500' },
+  };
+
   return (
-    <div className="p-4 md:p-8 space-y-8 pb-24 relative">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 pb-28">
       {/* Landfill Diversion Modal */}
       {showLandfillModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-              <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-red-100 dark:border-red-900 relative">
-                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-short">
-                      <TrashIcon className="h-8 w-8 text-red-600 dark:text-red-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Action Required</h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm leading-relaxed">
-                      One of your items could not be repaired. <br/>
-                      <span className="font-bold text-red-500 block mt-2">Please take the un-repaired item to an ISLAA7 Landfill.</span>
-                  </p>
-                  <button 
-                      onClick={() => setShowLandfillModal(false)}
-                      className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-200 dark:shadow-none"
-                  >
-                      I Understand
-                  </button>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" style={{ animation: 'fadeInUp 0.3s ease both' }}>
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-red-200/50 dark:border-red-900/50">
+            <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <TrashIcon className="h-7 w-7 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Action Required</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm leading-relaxed">
+              One of your items could not be repaired.{' '}
+              <span className="font-bold text-red-500">Please take it to an ISLAA7 drop-off point.</span>
+            </p>
+            <button onClick={() => setShowLandfillModal(false)} className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors">
+              I Understand
+            </button>
           </div>
+        </div>
       )}
 
+      {/* Greeting banner */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">{greeting},</p>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white mt-0.5">{user?.name?.split(' ')[0]} 👋</h2>
+        </div>
+        <button
+          onClick={() => navigate('/book')}
+          className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full gold-gradient text-black font-bold text-sm hover:opacity-90 hover:scale-105 transition-all duration-200 shadow-md"
+        >
+          <WrenchScrewdriverIcon className="h-4 w-4" />
+          New Repair
+        </button>
+      </div>
+
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map((stat, idx) => (
-          <div key={idx} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
-            <stat.icon className="h-8 w-8 mb-3 text-uae-gold" />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">{stat.label}</span>
+          <div
+            key={idx}
+            className="bg-white dark:bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/[0.06] flex flex-col hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+          >
+            <div className="w-10 h-10 rounded-xl bg-uae-gold/10 dark:bg-uae-gold/15 flex items-center justify-center mb-3">
+              <stat.icon className="h-5 w-5 text-uae-gold" />
+            </div>
+            <span className="text-2xl font-black text-gray-900 dark:text-white">{stat.value}</span>
+            <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mt-1">{stat.label}</span>
           </div>
         ))}
       </div>
 
-      {/* 5 Rs Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-8">The 5 Rs of Sustainability</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-          {sustainabilitySteps.map((step, idx) => (
-            <div key={idx} className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-uae-sand dark:bg-gray-700 flex items-center justify-center border border-uae-gold/20">
-                <step.icon className="h-8 w-8 text-uae-goldDark dark:text-uae-gold" />
-              </div>
-              <h4 className="font-bold text-sm text-gray-800 dark:text-white">{step.label}</h4>
-              <p className="text-[10px] text-gray-500 leading-tight max-w-[120px]">{step.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
           onClick={() => navigate('/book')}
-          className="gold-gradient text-white py-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg"
+          className="group relative overflow-hidden gold-gradient text-black py-5 rounded-2xl font-bold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
         >
-          <div className="p-1 border-2 border-white rounded-full"><WrenchScrewdriverIcon className="h-5 w-5" /></div>
-          {t('book_repair')}
+          <div className="w-8 h-8 rounded-lg bg-black/10 flex items-center justify-center">
+            <WrenchScrewdriverIcon className="h-4 w-4" />
+          </div>
+          <span className="text-base">{t('book_repair')}</span>
         </button>
-        <button 
+        <button
           onClick={() => navigate('/rewards')}
-          className="bg-[#967C37] text-white py-6 rounded-xl font-bold shadow-lg hover:bg-[#7a642b] transition-all flex items-center justify-center gap-3 text-lg"
+          className="group relative overflow-hidden bg-gray-900 dark:bg-white/5 text-white border border-gray-800 dark:border-white/10 py-5 rounded-2xl font-bold shadow-sm hover:bg-gray-800 dark:hover:bg-white/10 hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3"
         >
-          <div className="p-1 border-2 border-white rounded-full"><GiftIcon className="h-5 w-5" /></div>
-          {t('browse_rewards')}
+          <div className="w-8 h-8 rounded-lg bg-uae-gold/20 flex items-center justify-center">
+            <GiftIcon className="h-4 w-4 text-uae-gold" />
+          </div>
+          <span className="text-base">{t('browse_rewards')}</span>
         </button>
       </div>
 
       {/* Recent Requests */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-        <div className="flex justify-between items-center mb-6">
-           <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('recent_requests')}</h3>
-           <button onClick={() => navigate('/history')} className="text-xs font-bold text-uae-gold hover:underline">{t('view_all')}</button>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-white/[0.06]">
+        <div className="flex justify-between items-center px-6 pt-6 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+          <h3 className="text-base font-black text-gray-900 dark:text-white">{t('recent_requests')}</h3>
+          <button onClick={() => navigate('/history')} className="text-xs font-bold text-uae-gold hover:brightness-110 transition-all">
+            {t('view_all')} →
+          </button>
         </div>
-        
-        {repairs.length === 0 ? (
-           <div className="text-center py-10">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                 <WrenchScrewdriverIcon className="h-8 w-8 text-gray-300" />
+        <div className="px-6 pb-6">
+          {repairs.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-14 h-14 bg-gray-50 dark:bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <WrenchScrewdriverIcon className="h-7 w-7 text-gray-300 dark:text-gray-600" />
               </div>
-              <p className="text-sm text-gray-500 font-medium">{t('no_repairs')}</p>
-              <p className="text-xs text-gray-400 mt-1">{t('start_repair_hint')}</p>
-           </div>
-        ) : (
-          <div className="space-y-4">
-             {repairs.slice(0, 3).map(repair => (
-                <div key={repair.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-600">
-                   <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center shadow-sm">
-                         <WrenchScrewdriverIcon className="h-5 w-5 text-uae-gold" />
+              <p className="text-sm font-bold text-gray-500 dark:text-gray-400">{t('no_repairs')}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">{t('start_repair_hint')}</p>
+              <button
+                onClick={() => navigate('/book')}
+                className="mt-5 px-5 py-2 rounded-full gold-gradient text-black text-xs font-bold hover:opacity-90 transition-opacity"
+              >
+                Book your first repair
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2 mt-4">
+              {repairs.slice(0, 3).map(repair => {
+                const sc = statusConfig[repair.status] || statusConfig[RepairStatus.PENDING];
+                return (
+                  <div key={repair.id} className="flex items-center justify-between p-4 bg-gray-50/80 dark:bg-white/[0.03] rounded-xl border border-gray-100/80 dark:border-white/[0.05] hover:border-uae-gold/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-uae-gold/10 dark:bg-uae-gold/15 flex items-center justify-center flex-shrink-0">
+                        <WrenchScrewdriverIcon className="h-4 w-4 text-uae-gold" />
                       </div>
                       <div>
-                         <h4 className="text-sm font-bold text-gray-900 dark:text-white">{repair.itemName || repair.category}</h4>
-                         <p className="text-xs text-gray-500">{repair.dateCreated}</p>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{repair.itemName || repair.category}</h4>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{repair.dateCreated}</p>
                       </div>
-                   </div>
-                   <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
-                      repair.status === RepairStatus.COMPLETED ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                   }`}>
-                      {repair.status}
-                   </span>
-                </div>
-             ))}
+                    </div>
+                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${sc.bg} ${sc.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                      {repair.status.replace('_', ' ')}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 5 Rs Section */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-white/[0.06] p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-lg bg-uae-green/10 flex items-center justify-center">
+            <GlobeAltIcon className="h-4 w-4 text-uae-green" />
           </div>
-        )}
+          <h3 className="text-base font-black text-gray-900 dark:text-white">The 5 Rs of Sustainability</h3>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {sustainabilitySteps.map((step, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/[0.05] text-center hover:border-uae-gold/30 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-uae-gold/10 dark:bg-uae-gold/15 flex items-center justify-center">
+                <step.icon className="h-5 w-5 text-uae-gold" />
+              </div>
+              <h4 className="font-black text-xs text-gray-900 dark:text-white">{step.label}</h4>
+              <p className="text-[10px] text-gray-400 leading-tight">{step.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1603,72 +1645,106 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-glow text-center border border-uae-gold/30">
-        <button onClick={onBack} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
-           <ArrowLeftIcon className="h-6 w-6" />
-        </button>
-        <div className="w-16 h-16 bg-uae-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-           <UserIcon className="h-8 w-8 text-uae-gold" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-           {role === UserRole.CITIZEN ? 'Citizen' : role === UserRole.TECHNICIAN ? 'Technician' : 'Admin'} Login
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your credentials to access your account</p>
-        
-        {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 text-xs font-bold">{error}</p>
-            </div>
-        )}
+  const [mounted2, setMounted2] = useState(false);
+  useEffect(() => { const id = setTimeout(() => setMounted2(true), 60); return () => clearTimeout(id); }, []);
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-left">
-           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Email Address</label>
-            <div className="relative">
-              <EnvelopeIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
-              <input 
-                type="email" 
-                required 
-                className="glass-input dark:bg-gray-700 dark:text-white w-full p-3 pl-10 rounded-lg outline-none focus:ring-2 focus:ring-uae-gold" 
-                placeholder="name@example.com" 
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
+  const isTech = role === UserRole.TECHNICIAN;
+  const accentColor = isTech ? '#00732F' : '#C29B40';
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+      <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '56px 56px' }} />
+
+      <div
+        className="w-full max-w-md relative z-10"
+        style={{ opacity: mounted2 ? 1 : 0, transform: mounted2 ? 'translateY(0)' : 'translateY(28px)', transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)' }}
+      >
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-6 group"
+        >
+          <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+
+        <div className="landing-glass rounded-3xl p-8 border border-white/10">
+          {/* Header */}
+          <div className="flex items-center gap-4 mb-8">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${accentColor}20`, border: `1px solid ${accentColor}40` }}
+            >
+              {isTech ? (
+                <WrenchScrewdriverIcon className="h-6 w-6" style={{ color: accentColor }} />
+              ) : (
+                <UserIcon className="h-6 w-6" style={{ color: accentColor }} />
+              )}
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-white">
+                {role === UserRole.CITIZEN ? 'Citizen' : role === UserRole.TECHNICIAN ? 'Technician' : 'Admin'} Login
+              </h2>
+              <p className="text-gray-500 text-sm">Enter your credentials to continue</p>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Password</label>
-            <div className="relative">
-              <LockClosedIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
-              <input 
-                type="password" 
-                required 
-                className="glass-input dark:bg-gray-700 dark:text-white w-full p-3 pl-10 rounded-lg outline-none focus:ring-2 focus:ring-uae-gold" 
-                placeholder="••••••••" 
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
+
+          {error && (
+            <div className="mb-5 p-4 rounded-2xl border border-red-500/30 bg-red-500/10 flex items-start gap-3">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-400 text-sm font-medium">{error}</p>
             </div>
-          </div>
-          
-          <button 
-            type="submit"
-            disabled={loading}
-            className="w-full mt-4 gold-gradient text-white py-3 rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex justify-center items-center"
-          >
-            {loading ? (
-               <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Verifying...
-              </span>
-            ) : "Login"}
-          </button>
-        </form>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+              <div className="relative">
+                <EnvelopeIcon className="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
+                <input
+                  type="email"
+                  required
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl py-3.5 pl-12 pr-4 outline-none focus:border-uae-gold/60 focus:bg-white/8 transition-all duration-200"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
+              <div className="relative">
+                <LockClosedIcon className="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
+                <input
+                  type="password"
+                  required
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl py-3.5 pl-12 pr-4 outline-none focus:border-uae-gold/60 focus:bg-white/8 transition-all duration-200"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 py-4 rounded-xl font-bold text-black gold-gradient hover:opacity-90 hover:scale-[1.02] transition-all duration-200 flex justify-center items-center gap-2 shadow-lg disabled:opacity-60 disabled:scale-100"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-black/60" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Verifying…
+                </>
+              ) : 'Sign In →'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -1679,90 +1755,142 @@ const LoginPage = () => {
   const [view, setView] = useState<'LOGIN' | 'SIGNUP' | 'TECH_SIGNUP' | 'EMAIL_LOGIN'>('LOGIN');
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.CITIZEN);
   const [showUaePassModal, setShowUaePassModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { const id = setTimeout(() => setMounted(true), 60); return () => clearTimeout(id); }, []);
 
   if (view === 'SIGNUP') return <SignupPage onBack={() => setView('LOGIN')} />;
   if (view === 'TECH_SIGNUP') return <TechnicianSignup onBack={() => setView('LOGIN')} />;
   if (view === 'EMAIL_LOGIN') return <LoginForm role={selectedRole} onBack={() => setView('LOGIN')} onLogin={login} onLoginEmail={loginByEmail} />;
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-glow text-center border border-uae-gold/30 backdrop-blur-sm z-10 relative">
-        <img src={APP_LOGO_URL} alt="Logo" className="h-24 mx-auto mb-6 object-contain" />
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">{t('app_name')}</h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8 tracking-wide uppercase text-xs font-bold">{t('slogan')}</p>
+  const roleCards = [
+    {
+      role: UserRole.CITIZEN,
+      icon: UserIcon,
+      label: 'Citizen Login',
+      sublabel: 'Book repairs, earn rewards',
+      accent: 'border-uae-gold/40 hover:border-uae-gold',
+      iconBg: 'bg-uae-gold/10',
+      iconColor: 'text-uae-gold',
+    },
+    {
+      role: UserRole.TECHNICIAN,
+      icon: WrenchScrewdriverIcon,
+      label: 'Technician Login',
+      sublabel: 'Manage your job queue',
+      accent: 'border-uae-green/40 hover:border-uae-green',
+      iconBg: 'bg-uae-green/10',
+      iconColor: 'text-uae-green',
+    },
+  ];
 
-        <div className="space-y-4">
-          <button 
-            onClick={() => setShowUaePassModal(true)}
-            className="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-3"
-          >
-            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-               <span className="text-[8px] font-bold text-black">UAE</span>
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+      {/* Ambient orbs */}
+      <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '56px 56px' }} />
+
+      <div
+        className="w-full max-w-md relative z-10"
+        style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(28px)', transition: 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)' }}
+      >
+        {/* Card */}
+        <div className="landing-glass rounded-3xl p-8 border border-white/10">
+          {/* Logo + brand */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl gold-gradient flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse-glow">
+              <span className="text-white font-black text-2xl">إ</span>
             </div>
-            {t('login_uae_pass')}
-          </button>
-          
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">OR</span>
-            <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+            <h1 className="text-2xl font-black text-white mb-1">{t('app_name')}</h1>
+            <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">{t('slogan')}</p>
           </div>
 
-          <button 
-            onClick={() => { setSelectedRole(UserRole.CITIZEN); setView('EMAIL_LOGIN'); }}
-            className="w-full border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          {/* UAE Pass button */}
+          <button
+            onClick={() => setShowUaePassModal(true)}
+            className="w-full mb-5 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #00732F 0%, #009940 100%)', color: '#fff', boxShadow: '0 8px 32px rgba(0,115,47,0.35)' }}
           >
-            Citizen Login
+            <img src={UAE_PASS_LOGO} alt="UAE Pass" className="h-6 object-contain brightness-0 invert" onError={e => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+            <span>{t('login_uae_pass')}</span>
           </button>
 
-          <button 
-            onClick={() => { setSelectedRole(UserRole.TECHNICIAN); setView('EMAIL_LOGIN'); }}
-            className="w-full border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 py-3 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            Technician Login
-          </button>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-gray-600 text-xs font-bold uppercase tracking-widest">or continue with</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          {/* Role cards */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {roleCards.map(({ role, icon: Icon, label, sublabel, accent, iconBg, iconColor }) => (
+              <button
+                key={role}
+                onClick={() => { setSelectedRole(role); setView('EMAIL_LOGIN'); }}
+                className={`group p-4 rounded-2xl border bg-white/5 text-left transition-all duration-200 hover:bg-white/10 hover:-translate-y-0.5 ${accent}`}
+              >
+                <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
+                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                </div>
+                <p className="text-white font-bold text-sm leading-tight">{label}</p>
+                <p className="text-gray-500 text-xs mt-0.5 leading-tight">{sublabel}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Sign up links */}
+          <div className="pt-5 border-t border-white/10 text-center">
+            <p className="text-gray-500 text-sm mb-3">New to ISLAA7?</p>
+            <div className="flex gap-4 justify-center">
+              <button onClick={() => setView('SIGNUP')} className="text-uae-gold font-bold text-sm hover:brightness-125 transition-all">
+                Register as Citizen
+              </button>
+              <span className="text-white/20">|</span>
+              <button onClick={() => setView('TECH_SIGNUP')} className="text-uae-gold font-bold text-sm hover:brightness-125 transition-all">
+                Join as Technician
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
-           <p className="text-sm text-gray-500 mb-3">Don't have an account?</p>
-           <div className="flex gap-4 justify-center">
-             <button onClick={() => setView('SIGNUP')} className="text-uae-gold font-bold hover:underline">Register as Citizen</button>
-             <span className="text-gray-300">|</span>
-             <button onClick={() => setView('TECH_SIGNUP')} className="text-uae-gold font-bold hover:underline">Join as Technician</button>
-           </div>
-        </div>
+        <p className="text-center text-gray-700 text-xs mt-5">
+          UAE Government Initiative · UN SDG 12 · Secure Platform
+        </p>
       </div>
 
       {/* UAE Pass Coming Soon Modal */}
       {showUaePassModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl border border-uae-gold/30 max-w-sm w-full text-center relative animate-in fade-in zoom-in duration-300">
-                <button 
-                   onClick={() => setShowUaePassModal(false)}
-                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                >
-                    <XMarkIcon className="h-6 w-6" />
-                </button>
-                
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Coming Soon</h3>
-                
-                <div className="flex items-center justify-center gap-4 mb-8">
-                    <img src={APP_LOGO_URL} alt="ISLAA7" className="h-16 object-contain" />
-                    <XMarkIcon className="h-6 w-6 text-gray-300" />
-                    <img src={UAE_PASS_LOGO} alt="UAE Pass" className="h-16 object-contain" />
-                </div>
-                
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    We are currently working on integrating secure UAE Pass authentication for a seamless experience.
-                </p>
-                
-                <button 
-                    onClick={() => setShowUaePassModal(false)}
-                    className="w-full bg-uae-gold text-white py-3 rounded-xl font-bold hover:bg-uae-goldDark transition-colors"
-                >
-                    Close
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div
+            className="landing-glass p-8 rounded-3xl border border-white/15 max-w-sm w-full text-center relative"
+            style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}
+          >
+            <button onClick={() => setShowUaePassModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-6">
+              <span className="text-uae-gold text-xs font-bold uppercase tracking-wider">Coming Soon</span>
             </div>
+            <div className="flex items-center justify-center gap-5 mb-6">
+              <div className="w-14 h-14 rounded-xl gold-gradient flex items-center justify-center shadow-lg">
+                <span className="text-white font-black text-xl">إ</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-white/30 mx-auto" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white/60 mx-auto" />
+                <div className="w-1.5 h-1.5 rounded-full bg-white/30 mx-auto" />
+              </div>
+              <img src={UAE_PASS_LOGO} alt="UAE Pass" className="h-14 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">UAE Pass Integration</h3>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              We are integrating secure UAE Pass authentication for a seamless one-click login experience. Use email login in the meantime.
+            </p>
+            <button onClick={() => setShowUaePassModal(false)} className="w-full gold-gradient text-black py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">
+              Got it
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -2090,7 +2218,7 @@ const App = () => {
   return (
     <AppContext.Provider value={value}>
       <HashRouter>
-        <div className={`min-h-screen transition-colors duration-300 ${theme === Theme.DARK ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+        <div className={`min-h-screen transition-colors duration-500 ${theme === Theme.DARK ? 'dark app-bg-dark' : 'app-bg-light'}`}>
            <Routes>
              <Route path="/" element={<LandingPage />} />
              <Route path="/market-plan" element={<MarketPlan />} />

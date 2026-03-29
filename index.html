@@ -183,6 +183,24 @@
         transform: translateY(-6px);
         box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       }
+
+      /* ── Dark-mode input focus ring ───────────────────────────── */
+      .dark input:focus, .dark textarea:focus, .dark select:focus {
+        outline: none;
+        border-color: rgba(194,155,64,0.6) !important;
+        box-shadow: 0 0 0 3px rgba(194,155,64,0.15);
+      }
+
+      /* ── Smooth page background ───────────────────────────────── */
+      .app-bg-light { background-color: #F6F6F9; }
+      .app-bg-dark  { background-color: #0a0a0f; }
+
+      /* ── Stat card entrance ───────────────────────────────────── */
+      @keyframes statIn {
+        from { opacity:0; transform: translateY(16px) scale(0.97); }
+        to   { opacity:1; transform: none; }
+      }
+      .stat-card { animation: statIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
     </style>
     <script>
       tailwind.config = {
