@@ -217,7 +217,7 @@ const NavBar = () => {
             </div>
             <div className="hidden md:block">
               <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight leading-tight">{t('app_name')}</h1>
-              <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase leading-tight">UAE Government Initiative</p>
+              <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase leading-tight">Repair Platform</p>
             </div>
           </div>
 
@@ -1238,13 +1238,21 @@ const RewardsPage = () => {
   );
 };
 
-const SignupPage = ({ onBack }: { onBack: () => void }) => {
+const SignupPage = ({ onBack, onLoginEmail }: { onBack: () => void; onLoginEmail: (email: string, password?: string) => Promise<void> }) => {
   const { register } = useApp();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
-  
+  // stored so the confirmation screen can auto-login
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [submittedPassword, setSubmittedPassword] = useState('');
+  // resend cooldown (seconds)
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -1263,20 +1271,19 @@ const SignupPage = ({ onBack }: { onBack: () => void }) => {
     setValidating(true);
 
     try {
-      // 1. Validate inputs with AI before hitting Supabase
       const isSpam = await validateWithAI(formData.name, formData.email);
-      
       if (isSpam) {
         setValidating(false);
         setLoading(false);
         setError("Registration blocked: Input detected as spam or invalid. Please provide a real name.");
         return;
       }
-
       setValidating(false);
-      // 2. Register
       await register(formData);
+      setSubmittedEmail(formData.email);
+      setSubmittedPassword(formData.password);
       setSuccess(true);
+      setResendCooldown(60);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Registration failed');
@@ -1286,30 +1293,119 @@ const SignupPage = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendCooldown]);
+
+  const handleResend = async () => {
+    setResendLoading(true);
+    try {
+      await supabase.auth.resend({ type: 'signup', email: submittedEmail });
+    } catch (_) { /* silent */ }
+    setResendLoading(false);
+    setResendCooldown(60);
+  };
+
+  const handleContinueToApp = async () => {
+    setLoginLoading(true);
+    setLoginError(null);
+    try {
+      await onLoginEmail(submittedEmail, submittedPassword);
+      // onLoginEmail navigates to /home on success — nothing more needed here
+    } catch (err: any) {
+      setLoginError(err.message || 'Login failed. Please try again from the login screen.');
+      setLoginLoading(false);
+    }
+  };
+
   const handleEmiratesIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatEmiratesID(e.target.value);
-    setFormData({ ...formData, emiratesId: formatted });
+    setFormData({ ...formData, emiratesId: formatEmiratesID(e.target.value) });
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatUAEPhone(e.target.value);
-    setFormData({ ...formData, phone: formatted });
+    setFormData({ ...formData, phone: formatUAEPhone(e.target.value) });
   };
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-glow text-center border border-uae-gold/30">
-          <div className="w-16 h-16 bg-uae-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircleIcon className="h-8 w-8 text-uae-gold" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+        {/* Ambient orbs */}
+        <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+        <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+
+        <div className="w-full max-w-sm relative z-10 landing-glass rounded-3xl border border-white/10 p-8 text-center" style={{ animation: 'fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both' }}>
+          {/* Animated envelope icon */}
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-uae-gold/15 border border-uae-gold/30 flex items-center justify-center animate-pulse-glow">
+              <EnvelopeIcon className="h-10 w-10 text-uae-gold" />
+            </div>
+            {/* Badge */}
+            <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-uae-green border-2 border-black flex items-center justify-center">
+              <CheckIcon className="h-3.5 w-3.5 text-white" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Registration Successful</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Your account has been created. <br/>
-            Please check your email for verification if required, or proceed to login.
+
+          <h2 className="text-2xl font-black text-white mb-2">Check your inbox</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-1">
+            We sent a confirmation link to
           </p>
-          <button onClick={onBack} className="text-uae-gold font-bold hover:underline text-sm">
-            Return to Login
+          <p className="text-uae-gold font-bold text-sm mb-6 break-all">{submittedEmail}</p>
+
+          <ol className="text-left space-y-3 mb-7">
+            {[
+              'Open the email from ISLAA7',
+              'Click the "Confirm your email" link',
+              'Come back here and tap the button below',
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full gold-gradient text-black text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <span className="text-gray-300 text-sm">{step}</span>
+              </li>
+            ))}
+          </ol>
+
+          {loginError && (
+            <div className="mb-4 p-3 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-2">
+              <ExclamationTriangleIcon className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-400 text-xs font-medium text-left">{loginError}</p>
+            </div>
+          )}
+
+          {/* Primary CTA */}
+          <button
+            onClick={handleContinueToApp}
+            disabled={loginLoading}
+            className="w-full py-4 rounded-xl font-bold text-black gold-gradient hover:opacity-90 hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2 mb-3 disabled:opacity-60 disabled:scale-100"
+          >
+            {loginLoading ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-black/60" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Signing you in…
+              </>
+            ) : (
+              <>I've confirmed my email — Continue to App →</>
+            )}
+          </button>
+
+          {/* Resend */}
+          <button
+            onClick={handleResend}
+            disabled={resendCooldown > 0 || resendLoading}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:text-gray-300 border border-white/10 hover:border-white/20 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {resendLoading ? 'Sending…' : resendCooldown > 0 ? `Resend email (${resendCooldown}s)` : 'Resend confirmation email'}
+          </button>
+
+          <button onClick={onBack} className="mt-4 text-gray-600 hover:text-gray-400 text-xs transition-colors">
+            ← Back to login
           </button>
         </div>
       </div>
@@ -1317,20 +1413,25 @@ const SignupPage = ({ onBack }: { onBack: () => void }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-glow border border-uae-gold/30 relative overflow-y-auto max-h-[90vh]">
-        <button onClick={onBack} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
-          <ArrowLeftIcon className="h-6 w-6" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+      <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="w-full max-w-md relative z-10 py-8">
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-4 group">
+          <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <span className="text-sm font-medium">Back</span>
         </button>
+      <div className="landing-glass border border-white/10 p-8 rounded-3xl overflow-y-auto max-h-[85vh]">
         
         <div className="w-full flex flex-col items-center text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Create Citizen Account</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Register for sustainable repair services</p>
+          <h2 className="text-2xl font-black text-white">Create Citizen Account</h2>
+          <p className="text-sm text-gray-500 mt-1">Register for sustainable repair services</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg text-center font-bold">
-            {error}
+          <div className="mb-4 p-3 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-2">
+            <ExclamationTriangleIcon className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-red-400 text-xs font-medium text-left">{error}</p>
           </div>
         )}
 
@@ -1445,6 +1546,7 @@ const SignupPage = ({ onBack }: { onBack: () => void }) => {
           </button>
         </form>
       </div>
+      </div>
     </div>
   );
 };
@@ -1507,31 +1609,73 @@ const TechnicianSignup = ({ onBack }: { onBack: () => void }) => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-glow text-center border border-uae-gold/30">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircleIcon className="h-10 w-10 text-green-600" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+        <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+        <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+
+        <div className="w-full max-w-sm relative z-10 landing-glass rounded-3xl border border-white/10 p-8 text-center" style={{ animation: 'fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both' }}>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="w-20 h-20 rounded-2xl bg-uae-gold/15 border border-uae-gold/30 flex items-center justify-center animate-pulse-glow">
+              <EnvelopeIcon className="h-10 w-10 text-uae-gold" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-uae-green border-2 border-black flex items-center justify-center">
+              <CheckIcon className="h-3.5 w-3.5 text-white" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Application Received</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">Reviewing credentials... <br/> Check your email for verification.</p>
-          <button onClick={onBack} className="text-uae-gold font-bold hover:underline">Return to Login</button>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-4">
+            <span className="text-uae-gold text-xs font-bold uppercase tracking-wider">Application Received</span>
+          </div>
+
+          <h2 className="text-2xl font-black text-white mb-3">Two things left to do</h2>
+
+          <ol className="text-left space-y-3 mb-7">
+            {[
+              { step: 'Confirm your email — check your inbox for a link from ISLAA7', color: 'text-uae-gold' },
+              { step: 'Wait for admin verification — we review all technician applications manually. This takes 1–3 business days.', color: 'text-gray-300' },
+            ].map((item, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full gold-gradient text-black text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <span className={`text-sm ${item.color}`}>{item.step}</span>
+              </li>
+            ))}
+          </ol>
+
+          <p className="text-gray-600 text-xs mb-6">
+            Once verified by an admin, you'll be able to log in and start accepting jobs.
+          </p>
+
+          <button
+            onClick={onBack}
+            className="w-full py-4 rounded-xl font-bold text-black gold-gradient hover:opacity-90 hover:scale-[1.02] transition-all duration-200"
+          >
+            Back to Login →
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-uae-sand dark:bg-gray-950 relative overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/arabesque.png')]">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-glow border border-uae-gold/30 relative">
-        <button onClick={onBack} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
-          <ArrowLeftIcon className="h-6 w-6" />
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+      <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
+      <div className="w-full max-w-md relative z-10 py-8">
+        <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-4 group">
+          <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
+          <span className="text-sm font-medium">Back</span>
         </button>
+      <div className="landing-glass border border-white/10 p-8 rounded-3xl overflow-y-auto max-h-[85vh]">
         <div className="w-full flex flex-col items-center text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Technician Application</h2>
+          <h2 className="text-2xl font-black text-white">Technician Application</h2>
+          <p className="text-sm text-gray-500 mt-1">Join ISLAA7 as a verified repair professional</p>
         </div>
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg text-center font-bold">
-            {error}
+          <div className="mb-4 p-3 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-2">
+            <ExclamationTriangleIcon className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-red-400 text-xs font-medium text-left">{error}</p>
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -1613,6 +1757,7 @@ const TechnicianSignup = ({ onBack }: { onBack: () => void }) => {
              ) : 'Apply Now'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   );
@@ -1758,7 +1903,7 @@ const LoginPage = () => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const id = setTimeout(() => setMounted(true), 60); return () => clearTimeout(id); }, []);
 
-  if (view === 'SIGNUP') return <SignupPage onBack={() => setView('LOGIN')} />;
+  if (view === 'SIGNUP') return <SignupPage onBack={() => setView('LOGIN')} onLoginEmail={loginByEmail} />;
   if (view === 'TECH_SIGNUP') return <TechnicianSignup onBack={() => setView('LOGIN')} />;
   if (view === 'EMAIL_LOGIN') return <LoginForm role={selectedRole} onBack={() => setView('LOGIN')} onLogin={login} onLoginEmail={loginByEmail} />;
 
@@ -1812,7 +1957,10 @@ const LoginPage = () => {
             className="w-full mb-5 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:opacity-90"
             style={{ background: 'linear-gradient(135deg, #00732F 0%, #009940 100%)', color: '#fff', boxShadow: '0 8px 32px rgba(0,115,47,0.35)' }}
           >
-            <img src={UAE_PASS_LOGO} alt="UAE Pass" className="h-6 object-contain brightness-0 invert" onError={e => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+            {/* UAE Pass inline badge — no external image dependency */}
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-white/20 border border-white/30 text-[10px] font-black tracking-tight leading-none text-white px-1">
+              UAE<br/>PASS
+            </span>
             <span>{t('login_uae_pass')}</span>
           </button>
 
@@ -1855,7 +2003,7 @@ const LoginPage = () => {
         </div>
 
         <p className="text-center text-gray-700 text-xs mt-5">
-          UAE Government Initiative · UN SDG 12 · Secure Platform
+          ISLAA7 · Sustainable Repair Platform · Secure &amp; Private
         </p>
       </div>
 
@@ -1881,7 +2029,9 @@ const LoginPage = () => {
                 <div className="w-1.5 h-1.5 rounded-full bg-white/60 mx-auto" />
                 <div className="w-1.5 h-1.5 rounded-full bg-white/30 mx-auto" />
               </div>
-              <img src={UAE_PASS_LOGO} alt="UAE Pass" className="h-14 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-uae-green/40 bg-uae-green/15">
+                <span className="text-uae-green font-black text-[11px] text-center leading-tight">UAE<br/>PASS</span>
+              </div>
             </div>
             <h3 className="text-xl font-bold text-white mb-3">UAE Pass Integration</h3>
             <p className="text-gray-400 text-sm leading-relaxed mb-6">
@@ -2034,6 +2184,51 @@ const App = () => {
   const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
   const [accessibility, setAccessibility] = useState<AccessibilitySettings>({ largeText: false, highContrast: false });
 
+  // Restore session after email confirmation redirect — Supabase sets a session cookie
+  // automatically when the user clicks the confirmation link, so on next load we pick it up.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user || user) return;
+      const meta = session.user.user_metadata || {};
+      const restored: User = {
+        id: session.user.id,
+        name: meta.full_name || session.user.email?.split('@')[0] || 'User',
+        email: session.user.email,
+        role: meta.role || UserRole.CITIZEN,
+        emirate: meta.emirate || 'Dubai',
+        address: meta.residential_address || '',
+        points: 0,
+        repairsCount: 0,
+        status: 'ACTIVE',
+        verificationStatus: meta.role === UserRole.TECHNICIAN ? VerificationStatus.PENDING : VerificationStatus.VERIFIED,
+      };
+      if (restored.role === UserRole.TECHNICIAN && restored.verificationStatus === VerificationStatus.PENDING) return;
+      try { db.loginByEmail(session.user.email!); } catch { db.registerUser({ ...restored }); }
+      setUser(restored);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) return;
+      const meta = session.user.user_metadata || {};
+      const restored: User = {
+        id: session.user.id,
+        name: meta.full_name || session.user.email?.split('@')[0] || 'User',
+        email: session.user.email,
+        role: meta.role || UserRole.CITIZEN,
+        emirate: meta.emirate || 'Dubai',
+        address: meta.residential_address || '',
+        points: 0,
+        repairsCount: 0,
+        status: 'ACTIVE',
+        verificationStatus: meta.role === UserRole.TECHNICIAN ? VerificationStatus.PENDING : VerificationStatus.VERIFIED,
+      };
+      if (restored.role === UserRole.TECHNICIAN && restored.verificationStatus === VerificationStatus.PENDING) return;
+      try { db.loginByEmail(session.user.email!); } catch { db.registerUser({ ...restored }); }
+      setUser(prev => prev ?? restored);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   const t = (key: string): string => {
     return TRANSLATIONS[key]?.[language] || key;
   };
@@ -2061,7 +2256,13 @@ const App = () => {
 
               if (error) {
                   console.warn("Supabase login failed, attempting local fallback:", error.message);
-                  loginError = error.message;
+                  // "Email not confirmed" means the user exists but hasn't confirmed yet —
+                  // treat it as a soft error so the mock-DB fallback can still let them in.
+                  if (error.message.toLowerCase().includes('email not confirmed')) {
+                      loginError = "Please confirm your email first — check your inbox for the link we sent.";
+                  } else {
+                      loginError = error.message;
+                  }
               } else if (data.user) {
                   sbUser = data.user;
               }
