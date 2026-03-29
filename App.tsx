@@ -201,9 +201,47 @@ const LanguageSwitcher = () => {
 };
 
 const NavBar = () => {
-  const { user, logout, t, language } = useApp();
+  const { user, logout, t, language, setLanguage, theme, setTheme } = useApp();
   const navigate = useNavigate();
   const isRTL = language === Language.ARABIC;
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleLogout = async () => {
+    setDropdownOpen(false);
+    await supabase.auth.signOut();
+    logout();
+    navigate('/');
+  };
+
+  const languages = [
+    { code: Language.ENGLISH, label: 'EN' },
+    { code: Language.ARABIC, label: 'عربي' },
+    { code: Language.RUSSIAN, label: 'RU' },
+    { code: Language.HINDI, label: 'HI' },
+  ];
+
+  const roleLabels: Record<string, string> = {
+    [UserRole.CITIZEN]: 'Citizen',
+    [UserRole.TECHNICIAN]: 'Technician',
+    [UserRole.ADMIN]: 'Admin',
+  };
+
+  const roleBadgeColors: Record<string, string> = {
+    [UserRole.CITIZEN]: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    [UserRole.TECHNICIAN]: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    [UserRole.ADMIN]: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  };
 
   return (
     <nav className="bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl shadow-sm sticky top-0 z-50 border-b border-gray-200/80 dark:border-white/[0.06]">
@@ -238,31 +276,103 @@ const NavBar = () => {
             {user?.role === UserRole.TECHNICIAN && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-uae-green/30 bg-uae-green/8 dark:bg-uae-green/15">
                 <ShieldCheckIcon className="h-3.5 w-3.5 text-uae-green" />
-                <span className="text-xs font-bold text-uae-green">Verified</span>
+                <span className="text-xs font-bold text-uae-green hidden sm:block">Verified</span>
               </div>
             )}
 
-            <LanguageSwitcher />
-
+            {/* Profile dropdown */}
             {user && (
-              <>
-                {/* Avatar → settings */}
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => navigate('/settings')}
-                  className="w-9 h-9 rounded-full gold-gradient flex items-center justify-center text-white font-black text-sm shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                  title="Settings"
+                  onClick={() => setDropdownOpen(v => !v)}
+                  className={`w-9 h-9 rounded-full gold-gradient flex items-center justify-center text-white font-black text-sm shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-950 ${dropdownOpen ? 'ring-uae-gold' : 'ring-transparent'}`}
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </button>
-                {/* Logout */}
-                <button
-                  onClick={logout}
-                  className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
-                  title={t('logout')}
-                >
-                  <ArrowRightOnRectangleIcon className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
-                </button>
-              </>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-72 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-900 overflow-hidden z-50 animate-fade-in-up" style={{animationDuration:'0.2s'}}>
+                    {/* User info header */}
+                    <div className="px-5 py-4 bg-gradient-to-br from-uae-gold/10 to-transparent dark:from-uae-gold/5 border-b border-gray-100 dark:border-white/[0.06]">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-full gold-gradient flex items-center justify-center text-white font-black text-base shadow-md flex-shrink-0">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 dark:text-white text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email || '—'}</p>
+                          <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${roleBadgeColors[user.role] || roleBadgeColors[UserRole.CITIZEN]}`}>
+                            {roleLabels[user.role] || user.role}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-2 space-y-0.5">
+                      {/* Dark / Light toggle */}
+                      <div className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                        <div className="flex items-center gap-2.5">
+                          {theme === Theme.DARK
+                            ? <MoonIcon className="h-4 w-4 text-uae-gold" />
+                            : <SunIcon className="h-4 w-4 text-uae-gold" />}
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            {theme === Theme.DARK ? 'Dark Mode' : 'Light Mode'}
+                          </span>
+                        </div>
+                        {/* Toggle switch */}
+                        <button
+                          onClick={() => setTheme(theme === Theme.DARK ? Theme.LIGHT : Theme.DARK)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 focus:outline-none ${theme === Theme.DARK ? 'bg-uae-gold' : 'bg-gray-200 dark:bg-gray-700'}`}
+                        >
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${theme === Theme.DARK ? 'translate-x-[18px]' : 'translate-x-[3px]'}`} />
+                        </button>
+                      </div>
+
+                      {/* Language switcher */}
+                      <div className="px-3 py-2.5">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <GlobeAltIcon className="h-3 w-3" /> Language
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {languages.map(l => (
+                            <button
+                              key={l.code}
+                              onClick={() => setLanguage(l.code)}
+                              className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-all ${
+                                language === l.code
+                                  ? 'bg-uae-gold text-white shadow-sm'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/8 dark:text-gray-300 dark:hover:bg-white/12'
+                              }`}
+                            >
+                              {l.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-gray-100 dark:bg-white/[0.06] mx-2" />
+
+                      {/* Settings link */}
+                      <button
+                        onClick={() => { setDropdownOpen(false); navigate('/settings'); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
+                      >
+                        <Cog6ToothIcon className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Settings</span>
+                      </button>
+
+                      {/* Sign out */}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left group"
+                      >
+                        <ArrowRightOnRectangleIcon className={`h-4 w-4 text-gray-400 group-hover:text-red-500 transition-colors ${isRTL ? 'rotate-180' : ''}`} />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors">{t('logout')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -2180,8 +2290,14 @@ const SettingsPage = () => {
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [language, setLanguage] = useState<Language>(Language.ENGLISH);
-  const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('islaa7_language');
+    return (saved as Language) || Language.ENGLISH;
+  });
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('islaa7_theme');
+    return (saved as Theme) || Theme.LIGHT;
+  });
   const [accessibility, setAccessibility] = useState<AccessibilitySettings>({ largeText: false, highContrast: false });
 
   // Restore session after email confirmation redirect — Supabase sets a session cookie
@@ -2325,7 +2441,9 @@ const App = () => {
       }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+  };
 
   // Updated register function to be robust against "Error sending confirmation email"
   // It registers in the Mock Database first (to ensure login works), then attempts Supabase.
@@ -2388,7 +2506,12 @@ const App = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('islaa7_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('islaa7_language', language);
+  }, [language]);
 
   const value = {
     user,
