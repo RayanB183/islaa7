@@ -134,12 +134,6 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
               {label}
             </button>
           ))}
-          <Link
-            to="/market-plan"
-            className="text-gray-400 hover:text-white text-sm font-medium transition-colors"
-          >
-            Market Plan
-          </Link>
         </div>
 
         <Link
@@ -239,12 +233,6 @@ function HeroSection() {
                 className="px-8 py-4 rounded-full font-bold text-base text-black gold-gradient shadow-2xl hover:opacity-90 hover:scale-105 transition-all duration-200"
               >
                 Book a Repair →
-              </Link>
-              <Link
-                to="/market-plan"
-                className="px-8 py-4 rounded-full font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:scale-105 transition-all duration-200"
-              >
-                View Market Plan
               </Link>
             </div>
           </div>
@@ -803,57 +791,6 @@ function TeamSection() {
   );
 }
 
-/* ─── Market Plan CTA ────────────────────────────────────────────── */
-function MarketPlanCTASection() {
-  return (
-    <section className="bg-black py-32 px-6">
-      <div className="max-w-4xl mx-auto">
-        <div
-          className="reveal rounded-3xl overflow-hidden relative"
-          style={{
-            background: 'linear-gradient(135deg, #0a0a0a 0%, #111 100%)',
-            border: '1px solid rgba(194,155,64,0.2)',
-          }}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle at 70% 50%, rgba(194,155,64,0.2) 0%, transparent 60%)',
-            }}
-          />
-          <div className="relative z-10 p-12 lg:p-16">
-            <p className="text-xs font-bold tracking-widest text-uae-gold uppercase mb-4">
-              Market Opportunity
-            </p>
-            <h2 className="text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
-              A $2.8B market.<br />We're just getting started.
-            </h2>
-            <p className="text-gray-400 text-lg mb-10 max-w-xl leading-relaxed">
-              The UAE waste management and repair services market represents a
-              massive underserved opportunity. View our full market analysis,
-              revenue projections, and go-to-market strategy.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/market-plan"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-black gold-gradient hover:opacity-90 hover:scale-105 transition-all duration-200"
-              >
-                View Market Plan →
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-white border border-white/20 bg-white/5 hover:bg-white/10 hover:scale-105 transition-all duration-200"
-              >
-                Try the Platform
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ─── Footer ─────────────────────────────────────────────────────── */
 function LandingFooter() {
@@ -906,12 +843,6 @@ function LandingFooter() {
                 >
                   About Us
                 </button>
-                <Link
-                  to="/market-plan"
-                  className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
-                >
-                  Market Plan
-                </Link>
                 <button
                   onClick={() => scrollTo('team')}
                   className="text-gray-500 hover:text-gray-300 text-sm transition-colors text-left bg-transparent border-none cursor-pointer"
@@ -963,7 +894,6 @@ export default function LandingPage() {
       <RewardsSection />
       <NextStepsSection />
       <TeamSection />
-      <MarketPlanCTASection />
       <LandingFooter />
     </div>
   );

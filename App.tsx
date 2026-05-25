@@ -1,7 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
-import MarketPlan from './MarketPlan';
 import { AnimatedCharactersSidebar } from '@/components/ui/animated-characters';
 import { Language, User, UserRole, Theme, AccessibilitySettings, VerificationStatus, RepairStatus, RepairCategory, RepairRequest } from './types';
 import { TRANSLATIONS, APP_LOGO_URL } from './constants';
@@ -2526,7 +2525,6 @@ const App = () => {
         <div className={`min-h-screen transition-colors duration-500 ${theme === Theme.DARK ? 'dark app-bg-dark' : 'app-bg-light'}`}>
            <Routes>
              <Route path="/" element={<LandingPage />} />
-             <Route path="/market-plan" element={<MarketPlan />} />
              <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/home" />} />
              <Route path="/home" element={<><NavBar />{renderDashboard()}</>} />
              <Route path="/book" element={user ? <><NavBar /><BookRepair /></> : <Navigate to="/login" />} />
