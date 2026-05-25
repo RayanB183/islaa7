@@ -1880,12 +1880,11 @@ const TechnicianSignup = ({ onBack }: { onBack: () => void }) => {
   );
 };
 
-const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, onBack: () => void, onLogin: (role: UserRole) => void, onLoginEmail: (email: string, password?: string) => Promise<void> }) => {
+const LoginForm = ({ role, onBack, onLogin, onLoginEmail, onTypingChange }: { role: UserRole, onBack: () => void, onLogin: (role: UserRole) => void, onLoginEmail: (email: string, password?: string) => Promise<void>, onTypingChange?: (v: boolean) => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1915,12 +1914,7 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
   const accentColor = isTech ? '#00732F' : '#C29B40';
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left: animated characters + smokey gold background */}
-      <AnimatedCharactersSidebar isTyping={isInputFocused} />
-
-      {/* Right: form */}
-      <div className="flex items-center justify-center p-8 bg-black relative overflow-hidden">
+    <>
       <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '56px 56px' }} />
@@ -1977,8 +1971,8 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
                   placeholder="name@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
+                  onFocus={() => onTypingChange?.(true)}
+                  onBlur={() => onTypingChange?.(false)}
                 />
               </div>
             </div>
@@ -1994,8 +1988,8 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
+                  onFocus={() => onTypingChange?.(true)}
+                  onBlur={() => onTypingChange?.(false)}
                 />
               </div>
             </div>
@@ -2018,8 +2012,7 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
           </form>
         </div>
       </div>
-      </div>
-    </div>
+    </>
   );
 };
 
@@ -2028,11 +2021,11 @@ const LoginPage = () => {
   const [view, setView] = useState<'LOGIN' | 'SIGNUP' | 'TECH_SIGNUP' | 'EMAIL_LOGIN'>('LOGIN');
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.CITIZEN);
   const [mounted, setMounted] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   useEffect(() => { const id = setTimeout(() => setMounted(true), 60); return () => clearTimeout(id); }, []);
 
   if (view === 'SIGNUP') return <SignupPage onBack={() => setView('LOGIN')} onLoginEmail={loginByEmail} />;
   if (view === 'TECH_SIGNUP') return <TechnicianSignup onBack={() => setView('LOGIN')} />;
-  if (view === 'EMAIL_LOGIN') return <LoginForm role={selectedRole} onBack={() => setView('LOGIN')} onLogin={login} onLoginEmail={loginByEmail} />;
 
   const roleCards = [
     {
@@ -2066,11 +2059,21 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left: animated characters */}
-      <AnimatedCharactersSidebar isTyping={false} />
+      {/* Left: animated characters — stays mounted for both views */}
+      <AnimatedCharactersSidebar isTyping={isTyping} />
 
-      {/* Right: role selection */}
+      {/* Right: role selection OR email form */}
       <div className="flex items-center justify-center p-8 bg-black relative overflow-hidden">
+      {view === 'EMAIL_LOGIN' ? (
+        <LoginForm
+          role={selectedRole}
+          onBack={() => { setView('LOGIN'); setIsTyping(false); }}
+          onLogin={login}
+          onLoginEmail={loginByEmail}
+          onTypingChange={setIsTyping}
+        />
+      ) : (
+      <>
       {/* Ambient orbs */}
       <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
@@ -2128,6 +2131,8 @@ const LoginPage = () => {
           ISLAA7 · Sustainable Repair Platform · Secure &amp; Private
         </p>
       </div>
+      </>
+      )}
       </div>
     </div>
   );
