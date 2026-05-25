@@ -1,5 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  PhotoIcon,
+  CpuChipIcon,
+  CheckCircleIcon,
+  ShieldCheckIcon,
+  CheckBadgeIcon,
+  GiftIcon,
+  TicketIcon,
+  TagIcon,
+  WrenchScrewdriverIcon,
+  SparklesIcon,
+  RocketLaunchIcon,
+  BuildingOffice2Icon,
+  GlobeAltIcon,
+  SunIcon,
+  ArrowPathIcon,
+  UsersIcon,
+} from '@heroicons/react/24/outline';
 
 /* ─── Scroll Reveal Hook ─────────────────────────────────────────── */
 export function useScrollReveal() {
@@ -344,22 +362,25 @@ function HowItWorksSection() {
       num: '01',
       title: 'Upload & Describe',
       body: 'Submit a photo of the broken item with a short description. Our system handles the rest automatically.',
-      icon: '📸',
+      Icon: PhotoIcon,
       accent: 'from-uae-gold/20',
+      iconColor: 'text-uae-gold',
     },
     {
       num: '02',
       title: 'AI Analysis & Match',
       body: 'Our AI instantly identifies the damage type, estimates the repair cost, and matches you with a verified nearby technician.',
-      icon: '🤖',
+      Icon: CpuChipIcon,
       accent: 'from-uae-green/20',
+      iconColor: 'text-uae-green',
     },
     {
       num: '03',
       title: 'Repaired & Rewarded',
       body: 'The technician arrives and completes the repair. Payment is released once the repair is completed. Earn points with every repair. (This feature is still being worked on)',
-      icon: '⭐',
+      Icon: CheckCircleIcon,
       accent: 'from-blue-500/20',
+      iconColor: 'text-blue-400',
     },
   ];
   return (
@@ -391,9 +412,9 @@ function HowItWorksSection() {
               style={{ transitionDelay: `${i * 120}ms` }}
             >
               <div
-                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.accent} to-transparent flex items-center justify-center text-3xl mb-5`}
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.accent} to-transparent flex items-center justify-center mb-5`}
               >
-                {step.icon}
+                <step.Icon className={`h-7 w-7 ${step.iconColor}`} />
               </div>
               <span className="text-gray-700 text-5xl font-black mb-2 leading-none">
                 {step.num}
@@ -425,22 +446,30 @@ function HowItWorksSection() {
 function WhySection() {
   const features = [
     {
-      icon: '🤖',
+      Icon: CpuChipIcon,
+      iconColor: 'text-blue-400',
+      iconBg: 'bg-blue-500/10',
       title: 'AI-Powered Estimates',
       body: 'Groq-powered LLM analyses photos to identify damage and estimate cost before a technician is dispatched.',
     },
     {
-      icon: '💰',
+      Icon: ShieldCheckIcon,
+      iconColor: 'text-uae-gold',
+      iconBg: 'bg-uae-gold/10',
       title: 'Escrow Payments',
       body: 'Payment is held securely and only released once the repair is completed.',
     },
     {
-      icon: '⭐',
+      Icon: CheckBadgeIcon,
+      iconColor: 'text-uae-green',
+      iconBg: 'bg-uae-green/10',
       title: 'Verified Technicians',
       body: 'Every worker is admin-verified. Ratings below 4 stars mean removal — quality is non-negotiable.',
     },
     {
-      icon: '🎁',
+      Icon: GiftIcon,
+      iconColor: 'text-purple-400',
+      iconBg: 'bg-purple-500/10',
       title: 'Real Rewards',
       body: 'Cinema tickets, meal vouchers, free repairs. (In progress — not yet confirmed)',
     },
@@ -466,7 +495,9 @@ function WhySection() {
               className="reveal hover-lift p-8 rounded-3xl bg-gray-50 border border-gray-100"
               style={{ transitionDelay: `${i * 80}ms` }}
             >
-              <span className="text-4xl mb-5 block">{f.icon}</span>
+              <div className={`w-12 h-12 rounded-xl ${f.iconBg} flex items-center justify-center mb-5`}>
+                <f.Icon className={`h-6 w-6 ${f.iconColor}`} />
+              </div>
               <h3 className="text-gray-900 text-lg font-bold mb-2">{f.title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{f.body}</p>
             </div>
@@ -480,10 +511,10 @@ function WhySection() {
 /* ─── Rewards ────────────────────────────────────────────────────── */
 function RewardsSection() {
   const rewards = [
-    { icon: '🎬', label: 'Cinema Tickets' },
-    { icon: '🍽️', label: 'Meal Vouchers' },
-    { icon: '🔧', label: 'Free Repairs' },
-    { icon: '🎁', label: 'Partner Discounts' },
+    { Icon: TicketIcon, label: 'Cinema Tickets', color: 'text-yellow-400' },
+    { Icon: TagIcon, label: 'Meal Vouchers', color: 'text-orange-400' },
+    { Icon: WrenchScrewdriverIcon, label: 'Free Repairs', color: 'text-uae-green' },
+    { Icon: SparklesIcon, label: 'Partner Discounts', color: 'text-blue-400' },
   ];
   return (
     <section
@@ -528,7 +559,7 @@ function RewardsSection() {
                 key={i}
                 className="hover-lift p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm flex flex-col items-center text-center"
               >
-                <span className="text-4xl mb-3">{r.icon}</span>
+                <r.Icon className={`h-8 w-8 mb-3 ${r.color}`} />
                 <span className="text-white text-sm font-semibold">{r.label}</span>
               </div>
             ))}
@@ -549,28 +580,28 @@ function RewardsSection() {
 function NextStepsSection() {
   const steps = [
     {
-      icon: '🚀',
+      Icon: RocketLaunchIcon,
       phase: 'Phase 1',
       title: 'Al Raha Beach Pilot Launch',
       body: 'Deploy to Al Raha Beach with 50 verified technicians. Validate the booking flow, repair quality, and user satisfaction in a controlled community.',
       timeline: 'Months 0–6',
     },
     {
-      icon: '🏙️',
+      Icon: BuildingOffice2Icon,
       phase: 'Phase 2',
       title: 'Abu Dhabi Expansion',
       body: 'Scale across Abu Dhabi with 500+ technicians. Partner with government agencies for outreach. Onboard all repair categories.',
       timeline: 'Months 6–18',
     },
     {
-      icon: '🇦🇪',
+      Icon: GlobeAltIcon,
       phase: 'Phase 3',
       title: 'UAE-Wide Rollout',
       body: 'Launch in Dubai, Sharjah, and Ajman. Partner with major UAE retailers for rewards redemption.',
       timeline: 'Months 18–36',
     },
     {
-      icon: '🌍',
+      Icon: SparklesIcon,
       phase: 'Phase 4',
       title: 'Regional GCC & High-Volume Expansion',
       body: 'Adapt the platform for Saudi Arabia, Kuwait, Qatar, Egypt, and Jordan. Become essential infrastructure, cutting municipal waste management costs by 50%.',
@@ -606,8 +637,8 @@ function NextStepsSection() {
               style={{ transitionDelay: `${i * 100}ms` }}
             >
               <div className="flex items-start gap-5">
-                <div className="w-14 h-14 rounded-2xl gold-gradient flex items-center justify-center text-2xl flex-shrink-0 shadow-lg">
-                  {step.icon}
+                <div className="w-14 h-14 rounded-2xl gold-gradient flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <step.Icon className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">
@@ -686,15 +717,15 @@ function TeamSection() {
         {/* SDG badges */}
         <div className="reveal mt-20 flex flex-wrap justify-center gap-4" style={{ transitionDelay: '500ms' }}>
           {[
-            { emoji: '🌱', label: 'Sustainability' },
-            { emoji: '♻️', label: 'Circular Economy' },
-            { emoji: '🤝', label: 'Fair Work' },
+            { Icon: SunIcon, label: 'Sustainability', color: 'text-uae-green' },
+            { Icon: ArrowPathIcon, label: 'Circular Economy', color: 'text-blue-500' },
+            { Icon: UsersIcon, label: 'Fair Work', color: 'text-uae-gold' },
           ].map((badge, i) => (
             <div
               key={i}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm"
             >
-              <span>{badge.emoji}</span>
+              <badge.Icon className={`h-4 w-4 ${badge.color}`} />
               <span className="text-gray-700 text-sm font-medium">{badge.label}</span>
             </div>
           ))}

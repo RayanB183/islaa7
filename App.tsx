@@ -2077,11 +2077,11 @@ const LoginPage = () => {
 
           {/* Role cards */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            {roleCards.map(({ role, icon: Icon, label, sublabel, accent, iconBg, iconColor }) => (
+            {roleCards.map(({ role, icon: Icon, label, sublabel, accent, iconBg, iconColor }, idx) => (
               <button
                 key={role}
                 onClick={() => { setSelectedRole(role); setView('EMAIL_LOGIN'); }}
-                className={`group p-4 rounded-2xl border bg-white/5 text-left transition-all duration-200 hover:bg-white/10 hover:-translate-y-0.5 ${accent}`}
+                className={`group p-4 rounded-2xl border bg-white/5 text-left transition-all duration-200 hover:bg-white/10 hover:-translate-y-0.5 ${accent} ${idx === 2 ? 'col-span-2' : ''}`}
               >
                 <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center mb-3`}>
                   <Icon className={`h-5 w-5 ${iconColor}`} />
