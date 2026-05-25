@@ -32,7 +32,6 @@ void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
 
 function SmokeyBg({ color = '#C29B40' }: { color?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef  = useRef({ x: 0, y: 0, hovering: false });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,8 +55,8 @@ function SmokeyBg({ color = '#C29B40' }: { color?: string }) {
     gl.enableVertexAttribArray(pos);
     gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
-    const uRes  = gl.getUniformLocation(prog, 'iResolution');
-    const uTime = gl.getUniformLocation(prog, 'iTime');
+    const uRes   = gl.getUniformLocation(prog, 'iResolution');
+    const uTime  = gl.getUniformLocation(prog, 'iTime');
     const uMouse = gl.getUniformLocation(prog, 'iMouse');
     const uColor = gl.getUniformLocation(prog, 'u_color');
 
@@ -76,26 +75,14 @@ function SmokeyBg({ color = '#C29B40' }: { color?: string }) {
       const t = (Date.now() - t0) / 1000;
       gl.uniform2f(uRes, w, h);
       gl.uniform1f(uTime, t);
-      const { x, y, hovering } = mouseRef.current;
-      gl.uniform2f(uMouse, hovering ? x : w / 2, hovering ? h - y : h / 2);
+      // Fixed center — no cursor tracking
+      gl.uniform2f(uMouse, w / 2, h / 2);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       raf = requestAnimationFrame(render);
     };
     render();
 
-    const onMove  = (e: MouseEvent) => { const r = canvas.getBoundingClientRect(); mouseRef.current.x = e.clientX - r.left; mouseRef.current.y = e.clientY - r.top; };
-    const onEnter = () => { mouseRef.current.hovering = true; };
-    const onLeave = () => { mouseRef.current.hovering = false; };
-    canvas.addEventListener('mousemove', onMove);
-    canvas.addEventListener('mouseenter', onEnter);
-    canvas.addEventListener('mouseleave', onLeave);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      canvas.removeEventListener('mousemove', onMove);
-      canvas.removeEventListener('mouseenter', onEnter);
-      canvas.removeEventListener('mouseleave', onLeave);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [color]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />;
