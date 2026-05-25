@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { AuroraBackground } from '@/components/ui/aurora-background';
+import { ShaderAnimation } from '@/components/ui/shader-animation';
+import { SectionWithMockup } from '@/components/blocks/section-with-mockup';
+import { Typewriter } from '@/components/ui/typewriter';
 import {
   PhotoIcon,
   CpuChipIcon,
@@ -152,19 +156,21 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
 /* ─── Hero ───────────────────────────────────────────────────────── */
 function HeroSection() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-black">
-      {/* Ambient orbs */}
+    <section className="relative min-h-[100dvh] flex items-center overflow-hidden bg-black">
+      {/* Aurora animated background */}
+      <AuroraBackground className="absolute inset-0" showRadialGradient />
+      {/* Ambient orbs (layered on top of aurora) */}
       <div
         className="absolute w-[700px] h-[700px] rounded-full hero-orb-1 -top-40 -left-40 pointer-events-none"
-        style={{ filter: 'blur(100px)' }}
+        style={{ filter: 'blur(100px)', opacity: 0.6 }}
       />
       <div
         className="absolute w-[600px] h-[600px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none"
-        style={{ filter: 'blur(100px)' }}
+        style={{ filter: 'blur(100px)', opacity: 0.6 }}
       />
       {/* Subtle grid */}
       <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
+        className="absolute inset-0 opacity-[0.025] pointer-events-none"
         style={{
           backgroundImage:
             'linear-gradient(rgba(255,255,255,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.4) 1px,transparent 1px)',
@@ -172,56 +178,114 @@ function HeroSection() {
         }}
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        {/* Eyebrow badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-8 animate-fade-in-up">
-          <span className="w-2 h-2 rounded-full bg-uae-green animate-pulse" />
-          <span className="text-uae-gold text-xs font-semibold tracking-widest uppercase">
-            UN SDG 12 · Responsible Consumption & Production
-          </span>
-        </div>
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 xl:gap-20 items-center">
 
-        {/* Main headline */}
-        <h1
-          className="text-6xl sm:text-7xl lg:text-[90px] font-black leading-none tracking-tighter mb-6 animate-fade-in-up"
-          style={{ animationDelay: '0.1s', animationFillMode: 'both' }}
-        >
-          <span className="text-white">Repair.</span>{' '}
-          <span className="gradient-text-gold">Reward.</span>{' '}
-          <span className="text-white">Renew.</span>
-        </h1>
+          {/* Left: Content */}
+          <div>
+            {/* Eyebrow badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-8 animate-fade-in-up">
+              <span className="w-2 h-2 rounded-full bg-uae-green animate-pulse" />
+              <span className="text-uae-gold text-xs font-semibold tracking-widest uppercase">
+                UN SDG 12 · Responsible Consumption & Production
+              </span>
+            </div>
 
-        <p
-          className="text-xl sm:text-2xl text-gray-300 font-light max-w-2xl mx-auto leading-relaxed mb-3 animate-fade-in-up"
-          style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
-        >
-          Don't Bin It Book It. Islaa7 connects residents with verified
-          repair technicians in minutes, turning waste into worth.
-        </p>
-        <p
-          className="text-lg text-uae-gold font-medium mb-10 animate-fade-in-up"
-          style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
-        >
-          إصلاح · The Arabic word for repair, reimagined for a sustainable future.
-        </p>
+            {/* Main headline — typewriter cycling through brand phrases */}
+            <h1
+              className="text-5xl sm:text-6xl xl:text-7xl font-black leading-none tracking-tighter mb-6 animate-fade-in-up text-white min-h-[1.2em]"
+              style={{ animationDelay: '0.1s', animationFillMode: 'both' }}
+            >
+              <Typewriter
+                text={[
+                  "Repair. Reward. Renew.",
+                  "Don't Bin It. Book It.",
+                  "Fix it. Keep it.",
+                  "Earn points. Cut waste.",
+                  "Technicians on demand.",
+                  "Built for sustainability.",
+                ]}
+                speed={110}
+                deleteSpeed={55}
+                waitTime={3000}
+                initialDelay={600}
+                className="text-uae-gold"
+                cursorChar="|"
+                cursorClassName="text-uae-gold/50 ml-0.5"
+              />
+            </h1>
 
-        {/* CTAs */}
-        <div
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up"
-          style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
-        >
-          <Link
-            to="/login"
-            className="px-8 py-4 rounded-full font-bold text-base text-black gold-gradient shadow-2xl hover:opacity-90 hover:scale-105 transition-all duration-200"
+            <p
+              className="text-lg sm:text-xl text-gray-300 font-light max-w-xl leading-relaxed mb-3 animate-fade-in-up"
+              style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
+            >
+              Don't Bin It Book It. Islaa7 connects residents with verified
+              repair technicians in minutes, turning waste into worth.
+            </p>
+            <p
+              className="text-base text-uae-gold font-medium mb-10 animate-fade-in-up"
+              style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
+            >
+              إصلاح · The Arabic word for repair, reimagined for a sustainable future.
+            </p>
+
+            {/* CTAs — left-aligned */}
+            <div
+              className="flex flex-col sm:flex-row items-start gap-4 animate-fade-in-up"
+              style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
+            >
+              <Link
+                to="/login"
+                className="px-8 py-4 rounded-full font-bold text-base text-black gold-gradient shadow-2xl hover:opacity-90 hover:scale-105 transition-all duration-200"
+              >
+                Book a Repair →
+              </Link>
+              <Link
+                to="/market-plan"
+                className="px-8 py-4 rounded-full font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:scale-105 transition-all duration-200"
+              >
+                View Market Plan
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: Impact snapshot — desktop only */}
+          <div
+            className="hidden lg:flex flex-col gap-4 animate-fade-in-up"
+            style={{ animationDelay: '0.5s', animationFillMode: 'both' }}
           >
-            Book a Repair →
-          </Link>
-          <Link
-            to="/market-plan"
-            className="px-8 py-4 rounded-full font-bold text-base text-white border border-white/20 bg-white/5 backdrop-blur-sm hover:bg-white/10 hover:scale-105 transition-all duration-200"
-          >
-            View Market Plan
-          </Link>
+            <div className="landing-glass rounded-3xl p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <p className="text-xs text-uae-gold font-bold tracking-widest uppercase mb-5">
+                The Problem We're Fixing
+              </p>
+              <div className="space-y-5">
+                <div>
+                  <p className="text-[2.6rem] font-black text-white leading-none">
+                    79,000<span className="text-uae-gold">+</span>
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">Tonnes of waste/year — Al Raha Beach alone</p>
+                </div>
+                <div className="h-px bg-white/[0.07]" />
+                <div>
+                  <p className="text-[2.6rem] font-black text-white leading-none">16,000</p>
+                  <p className="text-sm text-gray-500 mt-1">Tonnes repairable instead of discarded</p>
+                </div>
+                <div className="h-px bg-white/[0.07]" />
+                <div>
+                  <p className="text-[2.6rem] font-black text-uae-gold leading-none">10%</p>
+                  <p className="text-sm text-gray-500 mt-1">Platform commission — technicians keep 90%</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-glass rounded-2xl px-5 py-4 border border-uae-green/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] flex items-center gap-3">
+              <SunIcon className="h-4 w-4 text-uae-green flex-shrink-0" />
+              <p className="text-sm text-gray-400 leading-snug">
+                Aligned with <span className="text-white font-semibold">UN SDG 12</span> — Responsible Consumption & Production
+              </p>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -384,8 +448,12 @@ function HowItWorksSection() {
     },
   ];
   return (
-    <section id="how-it-works" className="bg-[#050508] py-32 px-6">
-      <div className="max-w-7xl mx-auto">
+    <section id="how-it-works" className="bg-[#050508] py-32 px-6 relative overflow-hidden">
+      {/* Shader overlay — organic living texture at low opacity */}
+      <div className="absolute inset-0 opacity-[0.10] pointer-events-none" aria-hidden="true">
+        <ShaderAnimation className="w-full h-full" />
+      </div>
+      <div className="relative z-10 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <p className="reveal text-xs font-bold tracking-widest text-uae-gold uppercase mb-4">
             The Process
@@ -488,7 +556,7 @@ function WhySection() {
             Built different. By design.
           </h2>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           {features.map((f, i) => (
             <div
               key={i}
@@ -891,6 +959,7 @@ export default function LandingPage() {
       <AboutSection />
       <HowItWorksSection />
       <WhySection />
+      <SectionWithMockup />
       <RewardsSection />
       <NextStepsSection />
       <TeamSection />

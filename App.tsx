@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useRef } from 'r
 import { HashRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import MarketPlan from './MarketPlan';
+import { AnimatedCharactersSidebar } from '@/components/ui/animated-characters';
 import { Language, User, UserRole, Theme, AccessibilitySettings, VerificationStatus, RepairStatus, RepairCategory, RepairRequest } from './types';
 import { TRANSLATIONS, APP_LOGO_URL } from './constants';
 import { db } from './services/mockDatabase';
@@ -1884,6 +1885,7 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1913,7 +1915,12 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
   const accentColor = isTech ? '#00732F' : '#C29B40';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left: animated characters + smokey gold background */}
+      <AnimatedCharactersSidebar isTyping={isInputFocused} />
+
+      {/* Right: form */}
+      <div className="flex items-center justify-center p-8 bg-black relative overflow-hidden">
       <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)', backgroundSize: '56px 56px' }} />
@@ -1970,6 +1977,8 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
                   placeholder="name@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
                 />
               </div>
             </div>
@@ -1985,6 +1994,8 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
                 />
               </div>
             </div>
@@ -2006,6 +2017,7 @@ const LoginForm = ({ role, onBack, onLogin, onLoginEmail }: { role: UserRole, on
             </button>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -2053,7 +2065,12 @@ const LoginPage = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-black">
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left: animated characters */}
+      <AnimatedCharactersSidebar isTyping={false} />
+
+      {/* Right: role selection */}
+      <div className="flex items-center justify-center p-8 bg-black relative overflow-hidden">
       {/* Ambient orbs */}
       <div className="absolute w-[600px] h-[600px] rounded-full hero-orb-1 -top-48 -left-48 pointer-events-none" style={{ filter: 'blur(90px)' }} />
       <div className="absolute w-[500px] h-[500px] rounded-full hero-orb-2 -bottom-32 -right-32 pointer-events-none" style={{ filter: 'blur(90px)' }} />
@@ -2111,7 +2128,7 @@ const LoginPage = () => {
           ISLAA7 · Sustainable Repair Platform · Secure &amp; Private
         </p>
       </div>
-
+      </div>
     </div>
   );
 };
