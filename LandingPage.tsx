@@ -159,7 +159,7 @@ function HeroSection() {
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-8 animate-fade-in-up">
           <span className="w-2 h-2 rounded-full bg-uae-green animate-pulse" />
           <span className="text-uae-gold text-xs font-semibold tracking-widest uppercase">
-            UAE Government Initiative · UN SDG 12
+            UN SDG 12 · Responsible Consumption & Production
           </span>
         </div>
 
@@ -177,14 +177,14 @@ function HeroSection() {
           className="text-xl sm:text-2xl text-gray-300 font-light max-w-2xl mx-auto leading-relaxed mb-3 animate-fade-in-up"
           style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
         >
-          Don't bin it — book it. Islaa7 connects UAE residents with verified
+          Don't Bin It Book It. Islaa7 connects residents with verified
           repair technicians in minutes, turning waste into worth.
         </p>
         <p
           className="text-lg text-uae-gold font-medium mb-10 animate-fade-in-up"
           style={{ animationDelay: '0.3s', animationFillMode: 'both' }}
         >
-          إصلاح · The Arabic word for repair, reimagined for a sustainable UAE.
+          إصلاح · The Arabic word for repair, reimagined for a sustainable future.
         </p>
 
         {/* CTAs */}
@@ -343,7 +343,7 @@ function HowItWorksSection() {
     {
       num: '01',
       title: 'Upload & Describe',
-      body: 'Sign in with UAE Pass and submit a photo of the broken item with a short description. Our system handles the rest automatically.',
+      body: 'Submit a photo of the broken item with a short description. Our system handles the rest automatically.',
       icon: '📸',
       accent: 'from-uae-gold/20',
     },
@@ -357,7 +357,7 @@ function HowItWorksSection() {
     {
       num: '03',
       title: 'Repaired & Rewarded',
-      body: 'The technician arrives, completes the repair. Confirm satisfaction, release escrow payment, and earn points redeemable for real rewards.',
+      body: 'The technician arrives and completes the repair. Payment is released once the repair is completed. Earn points with every repair. (This feature is still being worked on)',
       icon: '⭐',
       accent: 'from-blue-500/20',
     },
@@ -411,8 +411,8 @@ function HowItWorksSection() {
           <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full border border-uae-gold/30 bg-uae-gold/5">
             <span className="text-uae-gold text-2xl font-black">90%</span>
             <span className="text-gray-300 text-sm">
-              of repairs completed within{' '}
-              <strong className="text-white">7 working hours</strong>
+              of repairs to be planned within{' '}
+              <strong className="text-white">7 hours</strong>
             </span>
           </div>
         </div>
@@ -425,16 +425,6 @@ function HowItWorksSection() {
 function WhySection() {
   const features = [
     {
-      icon: '🏛️',
-      title: 'Government-Backed',
-      body: 'Official UAE government initiative — not a startup bet. Residents trust it like a public service.',
-    },
-    {
-      icon: '🔐',
-      title: 'UAE Pass Integrated',
-      body: 'One-click login with the national digital identity. No new accounts, no friction.',
-    },
-    {
       icon: '🤖',
       title: 'AI-Powered Estimates',
       body: 'Groq-powered LLM analyses photos to identify damage and estimate cost before a technician is dispatched.',
@@ -442,7 +432,7 @@ function WhySection() {
     {
       icon: '💰',
       title: 'Escrow Payments',
-      body: 'Payment is held securely and only released when the repair is confirmed satisfactory by the user.',
+      body: 'Payment is held securely and only released once the repair is completed.',
     },
     {
       icon: '⭐',
@@ -452,7 +442,7 @@ function WhySection() {
     {
       icon: '🎁',
       title: 'Real Rewards',
-      body: 'Cinema tickets, meal vouchers, free repairs. We turned sustainability into a game worth playing.',
+      body: 'Cinema tickets, meal vouchers, free repairs. (In progress — not yet confirmed)',
     },
   ];
   return (
@@ -525,33 +515,10 @@ function RewardsSection() {
               className="reveal text-gray-300 text-lg leading-relaxed mb-8"
               style={{ transitionDelay: '200ms' }}
             >
-              Every repair earns points. Points unlock real rewards — from cinema
-              tickets to free future repairs. We made sustainability genuinely
-              rewarding, not just morally satisfying.
+              Every repair earns points. Points can unlock rewards — from cinema
+              tickets to partner discounts. Rewards programme coming soon.
             </p>
             <div className="reveal space-y-4" style={{ transitionDelay: '300ms' }}>
-              <div className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-3xl">🎉</span>
-                <div>
-                  <p className="text-white font-semibold text-sm">
-                    First 3 repairs are completely free
-                  </p>
-                  <p className="text-gray-400 text-xs mt-0.5">
-                    No commitment. Try it risk-free.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-3xl">🔄</span>
-                <div>
-                  <p className="text-white font-semibold text-sm">
-                    Every 3 paid repairs = 1 free repair
-                  </p>
-                  <p className="text-gray-400 text-xs mt-0.5">
-                    A loyalty programme that actually pays off.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -566,9 +533,9 @@ function RewardsSection() {
               </div>
             ))}
             <div className="col-span-2 p-6 rounded-3xl bg-uae-gold/10 border border-uae-gold/30 text-center">
-              <p className="text-uae-gold text-3xl font-black">7%</p>
+              <p className="text-uae-gold text-3xl font-black">10%</p>
               <p className="text-gray-300 text-sm mt-1">
-                Platform commission — workers keep <strong className="text-white">93%</strong>
+                Platform commission — workers keep <strong className="text-white">90%</strong>
               </p>
             </div>
           </div>
@@ -599,14 +566,14 @@ function NextStepsSection() {
       icon: '🇦🇪',
       phase: 'Phase 3',
       title: 'UAE-Wide Rollout',
-      body: 'Launch in Dubai, Sharjah, and Ajman. Integrate UAE Pass nationwide. Partner with major UAE retailers for rewards redemption.',
+      body: 'Launch in Dubai, Sharjah, and Ajman. Partner with major UAE retailers for rewards redemption.',
       timeline: 'Months 18–36',
     },
     {
       icon: '🌍',
       phase: 'Phase 4',
-      title: 'GCC Expansion',
-      body: 'Adapt the platform for Saudi Arabia, Kuwait, and Qatar. Explore B2B enterprise repairs for hospitality and commercial sectors.',
+      title: 'Regional GCC & High-Volume Expansion',
+      body: 'Adapt the platform for Saudi Arabia, Kuwait, Qatar, Egypt, and Jordan. Become essential infrastructure, cutting municipal waste management costs by 50%.',
       timeline: 'Months 36+',
     },
   ];
@@ -663,11 +630,11 @@ function NextStepsSection() {
 /* ─── Team ───────────────────────────────────────────────────────── */
 function TeamSection() {
   const team = [
-    { name: 'Omar', role: 'Co-Founder', avatar: 'O' },
-    { name: 'Nasser', role: 'Co-Founder', avatar: 'N' },
-    { name: 'Kamil', role: 'Co-Founder', avatar: 'K' },
-    { name: 'Abdelrahman', role: 'Co-Founder', avatar: 'A' },
-    { name: 'Ibrahim', role: 'Co-Founder', avatar: 'I' },
+    { name: 'Omar Alemam', role: 'Co-Founder', avatar: 'O' },
+    { name: 'Nasser Armouti', role: 'Co-Founder', avatar: 'N' },
+    { name: 'Kamil Gilani', role: 'Co-Founder', avatar: 'K' },
+    { name: 'Abdelrahman Alemam', role: 'Co-Founder', avatar: 'A' },
+    { name: 'Ibrahim Siddiqui', role: 'Co-Founder', avatar: 'I' },
   ];
   return (
     <section id="team" className="bg-[#F8F8FA] py-32 px-6">
@@ -722,8 +689,6 @@ function TeamSection() {
             { emoji: '🌱', label: 'Sustainability' },
             { emoji: '♻️', label: 'Circular Economy' },
             { emoji: '🤝', label: 'Fair Work' },
-            { emoji: '🏛️', label: 'Gov-Backed' },
-            { emoji: '📱', label: 'UAE-First' },
           ].map((badge, i) => (
             <div
               key={i}
@@ -807,8 +772,7 @@ function LandingFooter() {
               <span className="text-white font-bold text-lg">ISLAA7 · إصلاح</span>
             </div>
             <p className="text-gray-500 text-sm max-w-xs leading-relaxed">
-              The UAE's government-backed digital repair platform. Reducing waste,
-              one repair at a time.
+              Don't Bin It Book It. Reducing waste, one repair at a time.
             </p>
             <p className="text-uae-gold text-xs mt-4 font-semibold">
               Don't Bin It, Book It™
@@ -868,7 +832,7 @@ function LandingFooter() {
           <div className="flex items-center gap-3">
             <span className="text-gray-600 text-xs">Powered by</span>
             <span className="text-uae-gold text-xs font-semibold">
-              UAE Pass · Groq AI · Supabase
+              Groq AI · Supabase
             </span>
           </div>
         </div>

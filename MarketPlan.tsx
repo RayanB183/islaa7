@@ -341,19 +341,19 @@ export default function MarketPlan() {
             <div className="reveal space-y-4">
               <div className="p-6 rounded-2xl bg-gray-900 text-white">
                 <p className="text-gray-400 text-sm mb-1">Average repair value</p>
-                <p className="text-5xl font-black text-uae-gold">AED 120</p>
+                <p className="text-5xl font-black text-uae-gold">AED 100</p>
                 <p className="text-gray-500 text-xs mt-2">
-                  Platform earns AED 8.40 · Worker earns AED 111.60
+                  Platform earns AED 10.00 · Worker earns AED 90.00
                 </p>
               </div>
 
               <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-gray-800 font-semibold">Worker Earnings</span>
-                  <span className="text-3xl font-black text-gray-900">93%</span>
+                  <span className="text-3xl font-black text-gray-900">90%</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-uae-green rounded-full" style={{ width: '93%' }} />
+                  <div className="h-full bg-uae-green rounded-full" style={{ width: '90%' }} />
                 </div>
                 <p className="text-gray-500 text-xs mt-2">Workers set their own prices. Platform never undercuts.</p>
               </div>
@@ -361,10 +361,10 @@ export default function MarketPlan() {
               <div className="p-6 rounded-2xl bg-gray-50 border border-gray-200">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-gray-800 font-semibold">Platform Commission</span>
-                  <span className="text-3xl font-black text-gray-900">7%</span>
+                  <span className="text-3xl font-black text-gray-900">10%</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-uae-gold rounded-full" style={{ width: '7%' }} />
+                  <div className="h-full bg-uae-gold rounded-full" style={{ width: '10%' }} />
                 </div>
                 <p className="text-gray-500 text-xs mt-2">
                   Covers platform operations, AI, escrow & rewards costs.
@@ -375,11 +375,11 @@ export default function MarketPlan() {
             <div className="reveal-right space-y-3">
               <p className="text-gray-700 font-bold mb-4">Monthly Revenue Projections</p>
               {[
-                { label: 'Year 1', repairs: '5,000/mo', revenue: 'AED 42K/mo' },
-                { label: 'Year 2', repairs: '15,000/mo', revenue: 'AED 126K/mo' },
-                { label: 'Year 3', repairs: '50,000/mo', revenue: 'AED 420K/mo' },
-                { label: 'Year 4', repairs: '100,000/mo', revenue: 'AED 840K/mo' },
-                { label: 'Year 5', repairs: '200,000/mo', revenue: 'AED 1.68M/mo' },
+                { label: 'Year 1', repairs: '5,000/mo', revenue: 'AED 50K/mo' },
+                { label: 'Year 2', repairs: '15,000/mo', revenue: 'AED 150K/mo' },
+                { label: 'Year 3', repairs: '50,000/mo', revenue: 'AED 500K/mo' },
+                { label: 'Year 4', repairs: '100,000/mo', revenue: 'AED 1.0M/mo' },
+                { label: 'Year 5', repairs: '200,000/mo', revenue: 'AED 2.0M/mo' },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -423,11 +423,11 @@ export default function MarketPlan() {
 
           <div className="reveal grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { year: 'Year 1', repairs: '5K', revenue: 'AED 504K/yr' },
-              { year: 'Year 2', repairs: '15K', revenue: 'AED 1.57M/yr' },
-              { year: 'Year 3', repairs: '50K', revenue: 'AED 5.46M/yr' },
-              { year: 'Year 4', repairs: '100K', revenue: 'AED 11.3M/yr' },
-              { year: 'Year 5', repairs: '200K', revenue: 'AED 23.5M/yr' },
+              { year: 'Year 1', repairs: '5K', revenue: 'AED 600K/yr' },
+              { year: 'Year 2', repairs: '15K', revenue: 'AED 1.8M/yr' },
+              { year: 'Year 3', repairs: '50K', revenue: 'AED 6.0M/yr' },
+              { year: 'Year 4', repairs: '100K', revenue: 'AED 12.0M/yr' },
+              { year: 'Year 5', repairs: '200K', revenue: 'AED 24.0M/yr' },
             ].map((item, i) => (
               <div
                 key={i}
@@ -482,8 +482,8 @@ export default function MarketPlan() {
                 targets: [
                   '10,000 registered users',
                   '5,000 repairs/month',
-                  'Government endorsement',
-                  'UAE Pass fully integrated',
+                  'All repair categories live',
+                  'Partner technician network',
                 ],
                 colorClass: 'border-uae-green/40 bg-uae-green/5',
               },
@@ -491,7 +491,7 @@ export default function MarketPlan() {
                 phase: '03',
                 title: 'UAE-Wide Launch',
                 timeline: 'Months 18–36',
-                desc: 'Expand to Dubai, Sharjah, Ajman. Integrate UAE Pass nationwide. Launch targeted rewards partnerships with major UAE retailers and hospitality brands.',
+                desc: 'Expand to Dubai, Sharjah, Ajman. Launch targeted rewards partnerships with major UAE retailers and hospitality brands.',
                 targets: [
                   '100,000 registered users',
                   '50,000 repairs/month',
@@ -502,13 +502,13 @@ export default function MarketPlan() {
               },
               {
                 phase: '04',
-                title: 'GCC Expansion',
+                title: 'GCC & Regional Expansion',
                 timeline: 'Months 36+',
-                desc: 'Adapt platform for Saudi Arabia, Kuwait, and Qatar. Explore B2B enterprise tier for hospitality and commercial sectors. Regional SDG reporting and impact measurement.',
+                desc: 'Adapt platform for Saudi Arabia, Kuwait, Qatar, Egypt (high-volume repair center), and Jordan. Targeting a 50% reduction in municipal waste management costs for participating cities.',
                 targets: [
-                  'GCC-wide presence',
-                  'B2B enterprise tier',
-                  'Regional SDG reporting',
+                  'MENA-wide presence',
+                  'High-volume market entry',
+                  '50% lower municipal costs',
                   '1M+ repairs/year',
                 ],
                 colorClass: 'border-purple-500/40 bg-purple-500/5',
@@ -587,8 +587,6 @@ export default function MarketPlan() {
               </thead>
               <tbody>
                 {[
-                  ['Government-backed', '✓', '✗', '✗', '✗'],
-                  ['UAE Pass integration', '✓', '✗', '✗', '✗'],
                   ['AI damage assessment', '✓', '✗', '✗', '✗'],
                   ['Transparent pricing', '✓', '✗', 'Partial', '✗'],
                   ['Verified technicians', '✓', 'Varies', 'Partial', '✗'],
@@ -674,22 +672,22 @@ export default function MarketPlan() {
                   },
                   {
                     label: 'Avg. Repair Value (AED)',
-                    values: ['120', '125', '130', '135', '140'],
+                    values: ['100', '105', '110', '115', '120'],
                     highlight: false,
                   },
                   {
                     label: 'Monthly GMV (AED)',
-                    values: ['600K', '1.875M', '6.5M', '13.5M', '28M'],
+                    values: ['500K', '1.575M', '5.5M', '11.5M', '24M'],
                     highlight: false,
                   },
                   {
                     label: 'Platform Revenue / Month',
-                    values: ['42K', '131K', '455K', '945K', '1.96M'],
+                    values: ['50K', '157.5K', '550K', '1.15M', '2.4M'],
                     highlight: true,
                   },
                   {
                     label: 'Annual Revenue (AED)',
-                    values: ['504K', '1.57M', '5.46M', '11.3M', '23.5M'],
+                    values: ['600K', '1.89M', '6.6M', '13.8M', '28.8M'],
                     highlight: true,
                   },
                   {

@@ -249,13 +249,19 @@ const NavBar = () => {
         <div className="flex justify-between h-16 items-center">
 
           {/* Brand */}
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/home')}>
-            <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <span className="text-white font-black text-base leading-none">إ</span>
-            </div>
-            <div className="hidden md:block">
-              <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight leading-tight">{t('app_name')}</h1>
-              <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase leading-tight">Repair Platform</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate('/')} className="p-1.5 rounded-lg text-gray-400 hover:text-white transition-colors bg-transparent border-none cursor-pointer hidden md:flex items-center gap-1" title="Back to landing page">
+              <ArrowLeftIcon className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-bold tracking-wide">Site</span>
+            </button>
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/home')}>
+              <div className="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                <span className="text-white font-black text-base leading-none">إ</span>
+              </div>
+              <div className="hidden md:block">
+                <h1 className="text-base font-black text-gray-900 dark:text-white tracking-tight leading-tight">{t('app_name')}</h1>
+                <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase leading-tight">Repair Platform</p>
+              </div>
             </div>
           </div>
 
@@ -2009,7 +2015,6 @@ const LoginPage = () => {
   const { login, loginByEmail, t } = useApp();
   const [view, setView] = useState<'LOGIN' | 'SIGNUP' | 'TECH_SIGNUP' | 'EMAIL_LOGIN'>('LOGIN');
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.CITIZEN);
-  const [showUaePassModal, setShowUaePassModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { const id = setTimeout(() => setMounted(true), 60); return () => clearTimeout(id); }, []);
 
@@ -2036,6 +2041,15 @@ const LoginPage = () => {
       iconBg: 'bg-uae-green/10',
       iconColor: 'text-uae-green',
     },
+    {
+      role: UserRole.ADMIN,
+      icon: TicketIcon,
+      label: 'Point Redemption Admin',
+      sublabel: 'Manage reward redemptions',
+      accent: 'border-purple-500/40 hover:border-purple-500',
+      iconBg: 'bg-purple-500/10',
+      iconColor: 'text-purple-400',
+    },
   ];
 
   return (
@@ -2059,25 +2073,6 @@ const LoginPage = () => {
             </div>
             <h1 className="text-2xl font-black text-white mb-1">{t('app_name')}</h1>
             <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">{t('slogan')}</p>
-          </div>
-
-          {/* UAE Pass button */}
-          <button
-            onClick={() => setShowUaePassModal(true)}
-            className="w-full mb-5 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #00732F 0%, #009940 100%)', color: '#fff', boxShadow: '0 8px 32px rgba(0,115,47,0.35)' }}
-          >
-            {/* UAE Pass inline badge — no external image dependency */}
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-white/20 border border-white/30 text-[10px] font-black tracking-tight leading-none text-white px-1">
-              UAE<br/>PASS
-            </span>
-            <span>{t('login_uae_pass')}</span>
-          </button>
-
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-gray-600 text-xs font-bold uppercase tracking-widest">or continue with</span>
-            <div className="flex-1 h-px bg-white/10" />
           </div>
 
           {/* Role cards */}
@@ -2117,42 +2112,6 @@ const LoginPage = () => {
         </p>
       </div>
 
-      {/* UAE Pass Coming Soon Modal */}
-      {showUaePassModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div
-            className="landing-glass p-8 rounded-3xl border border-white/15 max-w-sm w-full text-center relative"
-            style={{ animation: 'fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) both' }}
-          >
-            <button onClick={() => setShowUaePassModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
-              <XMarkIcon className="h-6 w-6" />
-            </button>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-uae-gold/30 bg-uae-gold/10 mb-6">
-              <span className="text-uae-gold text-xs font-bold uppercase tracking-wider">Coming Soon</span>
-            </div>
-            <div className="flex items-center justify-center gap-5 mb-6">
-              <div className="w-14 h-14 rounded-xl gold-gradient flex items-center justify-center shadow-lg">
-                <span className="text-white font-black text-xl">إ</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-white/30 mx-auto" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/60 mx-auto" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/30 mx-auto" />
-              </div>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-uae-green/40 bg-uae-green/15">
-                <span className="text-uae-green font-black text-[11px] text-center leading-tight">UAE<br/>PASS</span>
-              </div>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-3">UAE Pass Integration</h3>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              We are integrating secure UAE Pass authentication for a seamless one-click login experience. Use email login in the meantime.
-            </p>
-            <button onClick={() => setShowUaePassModal(false)} className="w-full gold-gradient text-black py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
